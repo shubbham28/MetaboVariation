@@ -1,0 +1,164 @@
+---
+title: "MetaboVariation"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{MetaboVariation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(eval = FALSE)
+
+```
+
+```{r setup,results="hide"}
+library(test)
+library(future)
+library(rstan)
+library(brms)
+library(plotly)
+library(readxl)
+```
+
+# Introduction
+
+## Background
+
+The majority of metabolomic biomarker studies to date have focused on biomarkers of disease obtained from comparing individuals with the disease and matched controls. This strategy has been successful for aiding diagnosis of disease. However, it has had limited impact in terms of early biomarkers of disease or metabolic dysfunction. Strategies to examine data at the individual level are necessary to progess in this area.\newline
+
+The objective of the "MetaboVariation" is to develop a methodology for identifying individuals with significant variation in their metabolomic profile and present the result in an understandable manner. Bayesian generalised linear model(BGLM) is used to identify individuals with significant variation in the metabolites level. The package is built on the function *brm* from package *brms* that fits Bayesian framework using STAN. MetaboVariation model learns from covariates present in the data and models the intra-individual variation of individuals using repeated measures. The model provides a posterior predictive distribution of biomarker values at the individual level, that is used to identify individuals with actual biomarker values outside the 95% central credible interval at one timepoint; thus flagging the individuals.
+
+This document gives a quick tour of MetaboVariation functionalities. It was written in R Markdown, using the *knitr* package for production. See help(package="MetaboVariation") for further details and references provided by citation("MetaboVariation").
+
+
+# Walkthrough
+
+## Prerequisite packages
+
+Before we start the MetaboVariation walkthrough, the user should have working R software enviroment installed on their machine. The MetaboVaraiton package has following dependencies and will also be installed along with the package if not already installed on the machine.
+
+* brms
+*  circlize
+*  ComplexHeatmap
+*  doParallel
+*  dplyr
+*  foreach
+*  future
+*  grid
+*  magrittr
+*  parallel
+*  plotly
+*  reshape2
+*  rstan
+*  scales
+*  stringr
+*  readxl
+*  tidyr
+*  ggplot2
+
+## Reading the data
+
+"metabol.data" is a dataset that mimics the real life situation of how metabolomic data are stored in most cases. It s randomly created dataset that contains metabolites levels of 10 metabolites for 164 individuals taken on four different timepoints. Sex, Age and BMI are also recorded for these individuals in the data. Some data preprocessing is also done on the data such as the "Subject_id" and "SexM.1F.2" are transformed to factor columns. THe names of covariates column and subject_id are stored in a variable for further use.
+
+```{r data}
+data(metabol.data)
+colnames(metabol.data)
+metabol.data$Subject_id = as.factor(metabol.data$Subject_id)
+metabol.data$SexM.1F.2 = as.factor(metabol.data$SexM.1F.2)
+covariates = c("SexM.1F.2","Age","BMI")
+subject_id = "Subject_id"
+
+```
+
+## get.metabolites
+
+The package also has a function "get.metabolites" that extract the unique metabolites name from the list of columns that conatian all the metabolites values. For correct result, the user should not pass any unnecessary column(covariate or subject_id column) to the function. The function will return the names of unique metabolites present in the data.
+
+```{r get.metabolites}
+metabolite_list = colnames(metabol.data)[5:length(colnames(metabol.data))]
+metabolites = get.metabolites(list = metabolite_list)
+metabolites
+```
+
+## plotMetabolite
+
+"plotMetabolite" shows the data distribution of the metabolite for each timepoint present in the data as a violin plot. The user can pass a single or multiple metabolite to the function to get plots for every metabolite passed.
+
+```{r plotMetabolite1}
+plotMetabolite(data = metabol.data,metabolite = metabolites[1:2])
+```
+
+The user can set *points=TRUE* to get observations along the end of tail of the violin plots. 
+
+```{r plotMetabolite2}
+plotMetabolite(data = metabol.data,metabolite = metabolites[1],points = TRUE)
+```
+
+## MetaboVariation
+
+"MetaboVariation" is the main function that did the main work. The fitting of the model and the predicting both happens in this function only. The function needs the data along with the names of covariates column and subject id column to understand data. It can work with single metabolite value or multiple values of metabolites. 
+
+The result of the function is of class "MetaboVariation" and divided further into two subclasses "meta.single_model" and "meta.multi_model" depeneding on the metabolites processed. 
+
+```{r MetaboVariation1,results="hide"}
+# save_brms_model = FALSE  It will not save the bayesian model developed during processing. 
+# full_posterior = FALSE It will not save the whole predicted posterior distribution that we got during predicting stage.
+
+model = MetaboVariation(data = metabol.data,subject_ids = subject_id,metabolite = metabolites[1:3],covariates = covariates,save_brms_model = FALSE,full_posterior = FALSE)#in-depth_result# full_posterior
+```
+
+When multiple metabolites are passed to the function. It becomes a object of subclass "meta.multi_model". Each component of the object is named after the metabolite and contains an object of subclass "meta.single_model". "meta.single_model" subclass contains the following values.
+
+*  significant_covariates
+*  result
+*  warmup
+*  iterations
+*  Rhat
+*  metabolite
+*  full_posterior(optional output)
+
+See *?MetaboVariation* for further details about the function.
+
+```{r MetaboVariation2}
+class(model)
+names(model)
+```
+
+```{r MetaboVariation3}
+class(model$metabolA)
+names(model$metabolA)
+```
+
+```{r MetaboVariation4}
+model$metabolA
+```
+
+
+## plot(plot.MetaboVariation)
+
+After modelling, "plot" helps in visualization of the results. It can show the results in three format i.e. circos plot, number of individual counts per timepoint for each metabolite or metabolites count for each individual. 
+
+* "circos" plot will show 95% credible interval of predicted posterior distribution for all the timepoints and if the actual value is outside the interval, the individual will be flagged. 
+* "metabolites_count" plot will show how many individuals are flagged in each timepoint for every metablite present in the "MetaboVariation" object.
+* "subject_count" plot will showa heat map which shows how many time an individual have been flagged for each metabolite. 
+
+
+```{r plot}
+# type = "circos", "metabolites_count", "subject_count"
+# timepoints = NULL/ vector Either all the timepoints are plotted in the plots or a list of numeric vectors are plotted in the plot
+
+plot(x= model$metabolA,type = "circos",timepoints = NULL)
+
+plot(x = model,type = "circos",timepoints = c(1,2,3))
+
+plot(x = model, type = "metabolites_count",timepoints = c(1,2,3))
+plot(x = model$metabolA, type = "metabolites_count")
+
+plot(x = model,type = "subject_count")
+```
