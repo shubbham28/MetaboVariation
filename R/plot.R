@@ -87,7 +87,7 @@ plot.MetaboVariation <- function(x,type = "circos",timepoints = NULL,threshold =
                              circlize::circos.text(i,0,values$id[i],adj=c(0,.5),facing="clockwise",niceFacing=T,cex = ifelse(size[i] == 0, 0.75,0.5),font=ifelse(size[i] == 0, 4,1)))
     if(is.null(timepoints)){
       height = 0.75/ncol(values)
-      for (i in ncol(values):2) {
+      for (i in 2:ncol(values)) {
         status[,i] = sapply(status[,i], function(x){ifelse(x==0,1,colors[i])})
         circlize::circos.track(ylim = c(0,1),bg.border=NA,track.margin=c(0,0),track.height=height, panel.fun = function(x, y) {
           value = scales::rescale(values[,i])
@@ -179,7 +179,7 @@ plot.MetaboVariation <- function(x,type = "circos",timepoints = NULL,threshold =
                                circlize::circos.text(i,0,values$id[i],adj=c(0,.5),facing="clockwise",niceFacing=T,cex = ifelse(size[i] == 0, 0.75,0.5),font=ifelse(size[i] == 0, 4,1)))
       if(is.null(timepoints)){
         height = 0.75/ncol(values)
-        for (i in ncol(values):2) {
+        for (i in 2:ncol(values)) {
           status[,i] = sapply(status[,i], function(x){ifelse(x==0,1,colors[i])})
           circlize::circos.track(ylim = c(0,1),bg.border=NA,track.margin=c(0,0),track.height=height, panel.fun = function(x, y) {
             value = scales::rescale(values[,i])
@@ -218,9 +218,6 @@ plot.MetaboVariation <- function(x,type = "circos",timepoints = NULL,threshold =
         time_data = as.numeric(gsub("[^0-9]", "",unique(status$timepoint)))
         if(!is.null(timepoints)){
           if(!all(timepoints %in% time_data)){
-            print(timepoints)
-            print(time_data)
-            print(status)
             stop("Timepoints passed are not present in the data")
           }
         }
