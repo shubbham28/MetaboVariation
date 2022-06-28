@@ -4,11 +4,11 @@ Title: Explore individual variation in metabolite levels using repeated measurem
 Version: 0.0.0.9000
 Authors@R: c(person("Shubbham", "Gupta",email = "shubbham.gupta@ucdconnect.ie", role = c("aut", "cre")),
     person("Lorraine", "Brennan",email = "lorraine.brennan@ucd.ie", role = c("aut")),
-    person("Claire", "Gormley",email = "claire.gormley@ucd.ie", role = c("aut")))
+    person("Isobel Claire", "Gormley",email = "claire.gormley@ucd.ie", role = c("aut")))
 Description: Metabovariation flags individuals that have significant variation in their
     metabolite levels based on assessment of repeated measures of metabolites. A  
     Bayesian generalised linear model (BGLM) is used to identify individuals with 
-    variations in their metabolite Levels and the model can include covariates such 
+    variations in their metabolite levels and the model can include covariates such 
     as sex, or age. Individuals are flagged when the metabolite levels lie outside 
     of specified posterior predictive intervals. 
 License: MIT + file LICENSE
