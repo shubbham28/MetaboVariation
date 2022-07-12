@@ -89,7 +89,7 @@ plot.MetaboVariation <- function(x,type = "circos",timepoints = NULL,...){
         })
         lgd = ComplexHeatmap::Legend(at = paste0("Timepoint",colnames(values)[2:ncol(values)]), type = "lines", legend_gp = grid::gpar(col = colors[2:ncol(values)], lwd = 3), title_position = "topleft", title = "Timepoints", ncol = 4)
         ComplexHeatmap::draw(lgd, x = unit(0.2, "npc"), y = unit(0.05, "npc"), just = c("left", "bottom"))
-        ComplexHeatmap::draw(ComplexHeatmap::Legend(at = c(" "),title = paste(model$metabolite,"Plot")), x = unit(0.475, "npc"), y = unit(0.875, "npc"), just = c("left", "bottom"))
+        ComplexHeatmap::draw(ComplexHeatmap::Legend(at = paste(model$metabolite,"plot")), x = unit(0.425, "npc"), y = unit(0.9, "npc"), just = c("left", "bottom"))
       }
     }
     else if(is.numeric(timepoints) & max(timepoints) <= ncol(values)-1){
@@ -104,7 +104,7 @@ plot.MetaboVariation <- function(x,type = "circos",timepoints = NULL,...){
         })
         lgd = ComplexHeatmap::Legend(at = paste0("Timepoint",timepoints), type = "lines", legend_gp = grid::gpar(col = colors, lwd = 3), title_position = "topleft", title = "Timepoints", ncol = 4)
         ComplexHeatmap::draw(lgd, x = unit(0.2, "npc"), y = unit(0.05, "npc"), just = c("left", "bottom"))
-        ComplexHeatmap::draw(ComplexHeatmap::Legend(at = c(" "),title = paste(model$metabolite,"Plot")), x = unit(0.475, "npc"), y = unit(0.875, "npc"), just = c("left", "bottom"))
+        ComplexHeatmap::draw(ComplexHeatmap::Legend(at = paste(model$metabolite,"plot")), x = unit(0.425, "npc"), y = unit(0.9, "npc"), just = c("left", "bottom"))
       }
 
 
@@ -184,7 +184,7 @@ plot.MetaboVariation <- function(x,type = "circos",timepoints = NULL,...){
           })
           lgd = ComplexHeatmap::Legend(at = paste0("Timepoint",colnames(values)[2:ncol(values)]), type = "lines", legend_gp = grid::gpar(col = colors[2:ncol(values)], lwd = 3), title_position = "topleft", title = "Timepoints", ncol = 4)
           ComplexHeatmap::draw(lgd, x = unit(0.2, "npc"), y = unit(0.05, "npc"), just = c("left", "bottom"))
-          ComplexHeatmap::draw(ComplexHeatmap::Legend(at = c(" "),title = paste(met,"Plot")), x = unit(0.475, "npc"), y = unit(0.875, "npc"), just = c("left", "bottom"))
+          ComplexHeatmap::draw(ComplexHeatmap::Legend(at = paste(met,"plot")), x = unit(0.425, "npc"), y = unit(0.9, "npc"), just = c("left", "bottom"))
         }
       }
       else if(is.numeric(timepoints) & max(timepoints) <= ncol(values)-1){
@@ -199,7 +199,7 @@ plot.MetaboVariation <- function(x,type = "circos",timepoints = NULL,...){
           })
           lgd = ComplexHeatmap::Legend(at = paste0("Timepoint",timepoints), type = "lines", legend_gp = grid::gpar(col = colors, lwd = 3), title_position = "topleft", title = "Timepoints", ncol = 4)
           ComplexHeatmap::draw(lgd, x = unit(0.2, "npc"), y = unit(0.05, "npc"), just = c("left", "bottom"))
-          ComplexHeatmap::draw(ComplexHeatmap::Legend(at = c(" "),title = paste(met,"Plot")), x = unit(0.475, "npc"), y = unit(0.875, "npc"), just = c("left", "bottom"))
+          ComplexHeatmap::draw(ComplexHeatmap::Legend(at = paste(met,"plot")), x = unit(0.425, "npc"), y = unit(0.9, "npc"), just = c("left", "bottom"))
         }
 
       }
