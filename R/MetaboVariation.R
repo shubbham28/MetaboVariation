@@ -127,7 +127,7 @@ MetaboVariation <- function ( data,individual_ids,metabolite,covariates=NULL, sa
     }
 
     return_list = list("significant_covariates" = co_list,"result" = brief_result,"warmup" = warmup,"iter"=iter,
-                       "Rhat" = summary(model)$spec_pars$Rhat)
+                       "Rhat" = summary(model)$spec_pars$Rhat,"metabolite" = metabolite)
     if(full_posterior){
       return_list[["full_posterior"]] = result
     }
