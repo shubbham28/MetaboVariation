@@ -15,6 +15,7 @@ Before we start the MetaboVariation walkthrough, the user should have working R 
 *  plotly
 *  reshape2
 *  rstan
+*  cmdstanr
 *  scales
 *  stringr
 *  readxl
