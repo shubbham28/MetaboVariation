@@ -28,7 +28,7 @@ Imports:
     parallel,
     plotly,
     reshape2,
-    cmdstanr,
+    rstan,
     scales,
     stringr,
     readxl,
