@@ -65,15 +65,6 @@ Shiny.MetaboVariation <- function ( data,individual_ids,metabolite,covariates=NU
   file = paste(metabolite,"model",sep="_")
   seed = 19205033
   i <- NULL
-  chk <- Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
-
-  if (nzchar(chk) && chk == "TRUE") {
-    # use 2 cores in CRAN/Travis/AppVeyor
-    cores <- getOption("mc.cores",2)
-  } else {
-    # use half of the cores in devtools::test()
-    cores <- getOption("mc.cores",parallel::detectCores()/2)
-  }
 
 
   col_list = colnames(data)
@@ -103,7 +94,7 @@ Shiny.MetaboVariation <- function ( data,individual_ids,metabolite,covariates=NU
     new_data = na.omit(new_data)
     print(paste("Model building for",metabolite))
     model = brms::brm(formula,data = new_data,iter = iter,
-                      warmup = warmup, cores = cores, seed = seed, file = file,thin = thin)
+                      warmup = warmup, seed = seed, file = file,thin = thin)
     rows <- nrow(new_data)
   #  doParallel::registerDoParallel(cores)
     print(paste("Calculating posterior predictive distribution for",metabolite))
