@@ -145,7 +145,7 @@ Shiny.MetaboVariation <- function ( data,individual_ids,metabolite,covariates=NU
         new_data = na.omit(new_data)
         print(paste("Model building for",met))
         model = brms::brm(formula,data = new_data,iter = iter,
-                          warmup = warmup, cores = cores, seed = seed, file = file,thin = thin)
+                          warmup = warmup, seed = seed, file = file,thin = thin)
 
         rows <- nrow(new_data)
  #       doParallel::registerDoParallel(cores)
