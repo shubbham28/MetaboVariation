@@ -93,28 +93,39 @@ Shiny.MetaboVariation <- function ( data,individual_ids,metabolite,covariates=NU
     new_data = reshape2::melt(data,id.vars = c(individual_ids,covariates),measure.vars = var_list,variable.name = "occurrence",value.name = "measurement")
     new_data = na.omit(new_data)
     print(paste("Model building for",metabolite))
-    model = brms::brm(formula,data = new_data,iter = iter,
-                      warmup = warmup, seed = seed, file = file,thin = thin)
-    rows <- nrow(new_data)
-  #  doParallel::registerDoParallel(cores)
-    print(paste("Calculating posterior predictive distribution for",metabolite))
+#     model = brms::brm(formula,data = new_data,iter = iter,
+#                       warmup = warmup, seed = seed, file = file,thin = thin)
+#     rows <- nrow(new_data)
+#   #  doParallel::registerDoParallel(cores)
+#     print(paste("Calculating posterior predictive distribution for",metabolite))
+#     result = c()
+#     for (i in 1:length(unique(new_data$occurrence))) {
+#       drop = paste0(metabolite,"_",i)
+#       new_model = update(model,measurement ~ SexM.1F.2 + Age + BMI + (1|Individual_id),newdata = new_data[!new_data$occurrence == drop,], file = file,silent=2,refresh=0,recompile = FALSE)
+#       posterior = brms::posterior_predict(new_model,newdata = new_data[new_data$occurrence == drop,])
+#       colnames(posterior) = paste(data[,'Individual_id'], drop)
+#       result = cbind(result,posterior)
+#     }
+#     result = as.data.frame(result)
+# #    result<-foreach::foreach(i=1:rows,.combine=cbind,.packages = c('brms','rstan','future'))%dopar%{
+#  #     new_model = update(model,file=file,newdata = new_data[-i,],silent=2,refresh=0)
+#   #    rbind.data.frame(paste(new_data[i,individual_ids], new_data$occurrence[i]),brms::posterior_predict(new_model,newdata = new_data[i,]))
+#    # }
+#     if(!save_brms_model){
+#       file.remove(paste(file,".rds",sep=""))
+#     }
+#     brief_result = t(apply(result, 2, function(x) {c(mean(x),quantile(x,probs = c(lower_cutoff/100,upper_cutoff/100)),quantile(x,upper_cutoff/100)-quantile(x,lower_cutoff/100))}))
     result = c()
-    for (i in 1:4) {
+    for (i in c(1,2,3,4)) {
       drop = paste0(metabolite,"_",i)
-      new_model = update(model,measurement ~ SexM.1F.2 + Age + BMI + (1|Individual_id),newdata = new_data[!new_data$occurrence == drop,], file = file,silent=2,refresh=0,recompile = FALSE)
-      posterior = brms::posterior_predict(new_model,newdata = new_data[new_data$occurrence == drop,])
-      colnames(posterior) = paste(data[,'Individual_id'], drop)
-      result = cbind(result,posterior)
+      model = MCMCglmm(measurement ~ SexM.1F.2 + Age + BMI,random = ~idh(Individual_id),data = new_data[!new_data$occurrence == drop,],nitt = 10000,pr=TRUE)
+      result = rbind(result,predict(model,newdata = new_data[new_data$occurrence == drop,],interval = "prediction",level=0.98))
     }
-    result = as.data.frame(result)
-#    result<-foreach::foreach(i=1:rows,.combine=cbind,.packages = c('brms','rstan','future'))%dopar%{
- #     new_model = update(model,file=file,newdata = new_data[-i,],silent=2,refresh=0)
-  #    rbind.data.frame(paste(new_data[i,individual_ids], new_data$occurrence[i]),brms::posterior_predict(new_model,newdata = new_data[i,]))
-   # }
     if(!save_brms_model){
       file.remove(paste(file,".rds",sep=""))
     }
-    brief_result = t(apply(result, 2, function(x) {c(mean(x),quantile(x,probs = c(lower_cutoff/100,upper_cutoff/100)),quantile(x,upper_cutoff/100)-quantile(x,lower_cutoff/100))}))
+    # brief_result = t(apply(result, 2, function(x) {c(mean(x),quantile(x,probs = c(lower_cutoff/100,upper_cutoff/100)),quantile(x,lower_cutoff/100)-quantile(x,upper_cutoff/100))}))
+    brief_result = cbind(result,result[,3] - result[,2])
     brief_result = cbind(brief_result,new_data$measurement)
     brief_result = cbind(brief_result,(brief_result[,2] < brief_result[,5] & brief_result[,5] < brief_result[,3]))
     colnames(brief_result) = c("mean",paste0(lower_cutoff,"%"),paste0(upper_cutoff,"%"),"QR","original","identifier")
@@ -144,29 +155,36 @@ Shiny.MetaboVariation <- function ( data,individual_ids,metabolite,covariates=NU
         new_data = reshape2::melt(data,id.vars = c(individual_ids,covariates),measure.vars = var_list,variable.name = "occurrence",value.name = "measurement")
         new_data = na.omit(new_data)
         print(paste("Model building for",met))
-        model = brms::brm(formula,data = new_data,iter = iter,
-                          warmup = warmup, seed = seed, file = file,thin = thin)
-
-        rows <- nrow(new_data)
- #       doParallel::registerDoParallel(cores)
-        print(paste("Calculating posterior predictive distribution for",met))
-        result = c()
-        for (i in 1:4) {
-          drop = paste0(met,"_",i)
-          new_model = update(model,measurement ~ SexM.1F.2 + Age + BMI + (1|Individual_id),newdata = new_data[!new_data$occurrence == drop,], file = file,silent=2,refresh=0,recompile = FALSE)
-          posterior = brms::posterior_predict(new_model,newdata = new_data[new_data$occurrence == drop,])
-          colnames(posterior) = paste(data[,'Individual_id'], drop)
-          result = cbind(result,posterior)
-        }
-        result = as.data.frame(result)
-        #    result<-foreach::foreach(i=1:rows,.combine=cbind,.packages = c('brms','rstan','future'))%dopar%{
+ #        model = brms::brm(formula,data = new_data,iter = iter,
+ #                          warmup = warmup, seed = seed, file = file,thin = thin)
+ #
+ #        rows <- nrow(new_data)
+ # #       doParallel::registerDoParallel(cores)
+ #        print(paste("Calculating posterior predictive distribution for",met))
+ #        result = c()
+ #        for (i in 1:length(unique(new_data$occurrence))) {
+ #          drop = paste0(met,"_",i)
+ #          new_model = update(model,measurement ~ SexM.1F.2 + Age + BMI + (1|Individual_id),newdata = new_data[!new_data$occurrence == drop,], file = file,silent=2,refresh=0,recompile = FALSE)
+ #          posterior = brms::posterior_predict(new_model,newdata = new_data[new_data$occurrence == drop,])
+ #          colnames(posterior) = paste(data[,'Individual_id'], drop)
+ #          result = cbind(result,posterior)
+ #        }
+ #        result = as.data.frame(result)
+ #        #    result<-foreach::foreach(i=1:rows,.combine=cbind,.packages = c('brms','rstan','future'))%dopar%{
         #     new_model = update(model,file=file,newdata = new_data[-i,],silent=2,refresh=0)
         #    rbind.data.frame(paste(new_data[i,individual_ids], new_data$occurrence[i]),brms::posterior_predict(new_model,newdata = new_data[i,]))
         # }
+        result = c()
+        for (i in c(1,2,3,4)) {
+          drop = paste0(met,"_",i)
+          model = MCMCglmm(measurement ~ SexM.1F.2 + Age + BMI,random = ~idh(Individual_id),data = new_data[!new_data$occurrence == drop,],nitt = 10000,pr=TRUE)
+          result = rbind(result,predict(model,newdata = new_data[new_data$occurrence == drop,],interval = "prediction",level=0.98))
+        }
         if(!save_brms_model){
           file.remove(paste(file,".rds",sep=""))
         }
-        brief_result = t(apply(result, 2, function(x) {c(mean(x),quantile(x,probs = c(lower_cutoff/100,upper_cutoff/100)),quantile(x,lower_cutoff/100)-quantile(x,upper_cutoff/100))}))
+        # brief_result = t(apply(result, 2, function(x) {c(mean(x),quantile(x,probs = c(lower_cutoff/100,upper_cutoff/100)),quantile(x,lower_cutoff/100)-quantile(x,upper_cutoff/100))}))
+        brief_result = cbind(result,result[,3] - result[,2])
         brief_result = cbind(brief_result,new_data$measurement)
         brief_result = cbind(brief_result,(brief_result[,2] < brief_result[,5] & brief_result[,5] < brief_result[,3]))
         colnames(brief_result) = c("mean",paste0(lower_cutoff,"%"),paste0(upper_cutoff,"%"),"QR","original","identifier")
