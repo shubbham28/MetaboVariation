@@ -121,18 +121,21 @@ Shiny.MetaboVariation <- function ( data,individual_ids,metabolite,covariates=NU
       model = MCMCglmm(measurement ~ SexM.1F.2 + Age + BMI,random = ~idh(Individual_id),data = new_data[!new_data$occurrence == drop,],nitt = 10000,pr=TRUE)
       result = rbind(result,predict(model,newdata = new_data[new_data$occurrence == drop,],interval = "prediction",level=0.98))
     }
- # brief_result = t(apply(result, 2, function(x) {c(mean(x),quantile(x,probs = c(lower_cutoff/100,upper_cutoff/100)),quantile(x,lower_cutoff/100)-quantile(x,upper_cutoff/100))}))
+    # brief_result = t(apply(result, 2, function(x) {c(mean(x),quantile(x,probs = c(lower_cutoff/100,upper_cutoff/100)),quantile(x,lower_cutoff/100)-quantile(x,upper_cutoff/100))}))
     brief_result = cbind(result,result[,3] - result[,2])
     brief_result = cbind(brief_result,new_data$measurement)
     brief_result = cbind(brief_result,(brief_result[,2] < brief_result[,5] & brief_result[,5] < brief_result[,3]))
     colnames(brief_result) = c("mean",paste0(lower_cutoff,"%"),paste0(upper_cutoff,"%"),"QR","original","identifier")
-    co_list = summary(model)$fixed[names(na.omit(apply(summary(model)$fixed[2:nrow(summary(model)$fixed),3:4],1,function(x) {ifelse(prod(x[1],x[2])>=0,1,NA )}))),3:4]
-    if(nrow(co_list)==0){
-      co_list = NULL
-    }
-
-    return_list = list("significant_covariates" = co_list,"result" = brief_result,"warmup" = warmup,"iter"=iter,
-                       "Rhat" = summary(model)$spec_pars$Rhat,"metabolite" = metabolite)
+    rownames(brief_result) = paste(new_data[,individual_ids], new_data$occurrence)
+    # co_list = summary(model)$fixed[names(na.omit(apply(summary(model)$fixed[2:nrow(summary(model)$fixed),3:4],1,function(x) {ifelse(prod(x[1],x[2])>=0,1,NA )}))),3:4]
+    # if(nrow(co_list)==0){
+    #   co_list = NULL
+    # }
+    #
+    # return_list = list("significant_covariates" = co_list,"result" = brief_result,"warmup" = warmup,"iter"=iter,
+    #                    "Rhat" = summary(model)$spec_pars$Rhat,"metabolite" = metabolite)
+    return_list = list("significant_covariates" = c('1'),"result" = brief_result,"warmup" = warmup,"iter"=iter,
+                       "Rhat" = 1,"metabolite" = metabolite)
     if(full_posterior){
       return_list[["full_posterior"]] = result
     }
@@ -182,12 +185,17 @@ Shiny.MetaboVariation <- function ( data,individual_ids,metabolite,covariates=NU
         brief_result = cbind(brief_result,new_data$measurement)
         brief_result = cbind(brief_result,(brief_result[,2] < brief_result[,5] & brief_result[,5] < brief_result[,3]))
         colnames(brief_result) = c("mean",paste0(lower_cutoff,"%"),paste0(upper_cutoff,"%"),"QR","original","identifier")
-        co_list = summary(model)$fixed[names(na.omit(apply(summary(model)$fixed[2:nrow(summary(model)$fixed),3:4],1,function(x) {ifelse(prod(x[1],x[2])>=0,1,NA )}))),3:4]
-        if(nrow(co_list)==0){
-          co_list = NULL
-        }
-        final_list[[met]] = list("metabolite" = met,"significant_covariates" = co_list,"result" = brief_result,"warmup" = warmup,"iter"=iter,
-                                 "Rhat" = summary(model)$spec_pars$Rhat)
+        rownames(brief_result) = paste(new_data[,individual_ids], new_data$occurrence)
+
+        # co_list = summary(model)$fixed[names(na.omit(apply(summary(model)$fixed[2:nrow(summary(model)$fixed),3:4],1,function(x) {ifelse(prod(x[1],x[2])>=0,1,NA )}))),3:4]
+        # if(nrow(co_list)==0){
+        #   co_list = NULL
+        # }
+        # final_list[[met]] = list("metabolite" = met,"significant_covariates" = co_list,"result" = brief_result,"warmup" = warmup,"iter"=iter,
+        #                          "Rhat" = summary(model)$spec_pars$Rhat)
+        final_list[[met]] = list("significant_covariates" = c('1'),"result" = brief_result,"warmup" = warmup,"iter"=iter,
+                           "Rhat" = 1,"metabolite" = metabolite)
+
         if(full_posterior){
           final_list[[met]][["full_posterior"]] = result
         }
