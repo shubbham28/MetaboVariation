@@ -28,7 +28,7 @@ Imports:
     parallel,
     plotly,
     reshape2,
-    MCMCGlmm,
+    MCMCglmm,
     rstan,
     scales,
     stringr,
