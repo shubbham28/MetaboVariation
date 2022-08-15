@@ -121,10 +121,7 @@ Shiny.MetaboVariation <- function ( data,individual_ids,metabolite,covariates=NU
       model = MCMCglmm(measurement ~ SexM.1F.2 + Age + BMI,random = ~idh(Individual_id),data = new_data[!new_data$occurrence == drop,],nitt = 10000,pr=TRUE)
       result = rbind(result,predict(model,newdata = new_data[new_data$occurrence == drop,],interval = "prediction",level=0.98))
     }
-    if(!save_brms_model){
-      file.remove(paste(file,".rds",sep=""))
-    }
-    # brief_result = t(apply(result, 2, function(x) {c(mean(x),quantile(x,probs = c(lower_cutoff/100,upper_cutoff/100)),quantile(x,lower_cutoff/100)-quantile(x,upper_cutoff/100))}))
+ # brief_result = t(apply(result, 2, function(x) {c(mean(x),quantile(x,probs = c(lower_cutoff/100,upper_cutoff/100)),quantile(x,lower_cutoff/100)-quantile(x,upper_cutoff/100))}))
     brief_result = cbind(result,result[,3] - result[,2])
     brief_result = cbind(brief_result,new_data$measurement)
     brief_result = cbind(brief_result,(brief_result[,2] < brief_result[,5] & brief_result[,5] < brief_result[,3]))
@@ -179,9 +176,6 @@ Shiny.MetaboVariation <- function ( data,individual_ids,metabolite,covariates=NU
           drop = paste0(met,"_",i)
           model = MCMCglmm(measurement ~ SexM.1F.2 + Age + BMI,random = ~idh(Individual_id),data = new_data[!new_data$occurrence == drop,],nitt = 10000,pr=TRUE)
           result = rbind(result,predict(model,newdata = new_data[new_data$occurrence == drop,],interval = "prediction",level=0.98))
-        }
-        if(!save_brms_model){
-          file.remove(paste(file,".rds",sep=""))
         }
         # brief_result = t(apply(result, 2, function(x) {c(mean(x),quantile(x,probs = c(lower_cutoff/100,upper_cutoff/100)),quantile(x,lower_cutoff/100)-quantile(x,upper_cutoff/100))}))
         brief_result = cbind(result,result[,3] - result[,2])
