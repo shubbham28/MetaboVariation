@@ -9,22 +9,22 @@ Description: Metabovariation flags individuals that have significant variation i
     metabolite levels based on assessment of repeated measures of metabolites. A  
     Bayesian generalised linear model (BGLM) is used to identify individuals with 
     variations in their metabolite levels and the model can include covariates such 
-    as sex, or age. Individuals are flagged when the metabolite levels lie outside 
+    as sex or age. Individuals are flagged when their metabolite levels lie outside 
     of specified posterior predictive intervals. 
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.1
 Imports: 
     circlize,
     ComplexHeatmap,
-    doParallel,
     dplyr,
-    foreach,
-    future,
     grid,
     magrittr,
     parallel,
+    doParallel,
+    foreach,
+    coda,
     plotly,
     reshape2,
     MCMCglmm,
@@ -32,6 +32,10 @@ Imports:
     stringr,
     readxl,
     tidyr,
+    shiny,
+    shinythemes,
+    writexl,
+    sortable,
     ggplot2
 Depends: 
     R (>= 2.10)
