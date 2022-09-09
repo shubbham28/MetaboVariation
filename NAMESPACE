@@ -2,10 +2,10 @@
 
 S3method(plot,MetaboVariation)
 export(MetaboVariation)
-export(Shiny.MetaboVariation)
 export(flagged.Individuals)
 export(get.metabolites)
 export(metabolite.plot)
+export(prediction)
 import(foreach)
 import(parallel)
 import(stats)
