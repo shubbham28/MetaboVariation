@@ -105,5 +105,6 @@ prediction<-function(object,seed = NULL,nsim=nrow(object$Sol),newdata=NULL,level
   pred<-cbind(pred, coda::HPDinterval(coda::mcmc(ynew), prob=level))
   colnames(pred)<-c("fit", "lwr", "upr")
   rownames(pred)<-1:dim(pred)[1]
-  return(pred)
+  result = list("posterior" = ynew,"summary"=pred)
+  return(result)
 }
