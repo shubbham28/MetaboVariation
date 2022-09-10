@@ -125,7 +125,7 @@ MetaboVariation <- function ( data,individual_ids,metabolite,covariates=NULL,ite
       set.seed(19205033)
       model = MCMCglmm::MCMCglmm(as.formula(formula),random = as.formula(paste("~us(1):",individual_ids)),data = new_data[-drop,],pr=TRUE,
                                  nitt = iter,thin = thin,burnin = warmup)
-      prediction(model,newdata = new_data[drop,])
+      prediction(model,newdata = new_data[drop,])$summary
     }
 
     brief_result = cbind(result,result[,3] - result[,2],new_data$measurement)
@@ -176,7 +176,7 @@ MetaboVariation <- function ( data,individual_ids,metabolite,covariates=NULL,ite
           set.seed(19205033)
           model = MCMCglmm::MCMCglmm(as.formula(formula),random = as.formula(paste("~us(1):",individual_ids)),data = new_data[-drop,],pr=TRUE,
                                      nitt = iter,thin = thin,burnin = warmup)
-          prediction(model,newdata = new_data[drop,])
+          prediction(model,newdata = new_data[drop,])$summary
         }
 
         brief_result = cbind(result,result[,3] - result[,2],new_data$measurement)
