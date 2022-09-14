@@ -60,7 +60,8 @@ MetaboVariation <- function ( data,individual_ids,metabolite,covariates=NULL,ite
     if(!is.integer(seed)){
       stop("seed must be an integer")
     }else{
-      set.seed(19205033)
+      seed = 19205033
+      set.seed(seed)
     }
   }
   future = getOption("future", TRUE)
@@ -122,7 +123,7 @@ MetaboVariation <- function ( data,individual_ids,metabolite,covariates=NULL,ite
       else{
         drop = i*div + c(1:div)
       }
-      set.seed(19205033)
+      set.seed(seed)
       model = MCMCglmm::MCMCglmm(as.formula(formula),random = as.formula(paste("~us(1):",individual_ids)),data = new_data[-drop,],pr=TRUE,
                                  nitt = iter,thin = thin,burnin = warmup)
       prediction(model,newdata = new_data[drop,])$summary
@@ -173,7 +174,7 @@ MetaboVariation <- function ( data,individual_ids,metabolite,covariates=NULL,ite
           else{
             drop = i*div + c(1:div)
           }
-          set.seed(19205033)
+          set.seed(seed)
           model = MCMCglmm::MCMCglmm(as.formula(formula),random = as.formula(paste("~us(1):",individual_ids)),data = new_data[-drop,],pr=TRUE,
                                      nitt = iter,thin = thin,burnin = warmup)
           prediction(model,newdata = new_data[drop,])$summary
