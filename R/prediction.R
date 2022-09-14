@@ -20,7 +20,8 @@ prediction<-function(object,seed = NULL,nsim=nrow(object$Sol),newdata=NULL,level
     if(!is.integer(seed)){
       stop("seed must be an integer")
     }else{
-      set.seed(19205033)
+      seed = 19205033
+      set.seed(seed)
     }
   }
   if(!is.null(newdata)){
