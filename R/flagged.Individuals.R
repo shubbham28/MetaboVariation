@@ -30,7 +30,7 @@
 #' }
 flagged.Individuals <- function(model,data,individual_id,threshold = 2){
   if(!inherits(model,"MetaboVariation")){
-    stop("Model passed is not of class 'Metabovariation'")
+    stop("Model passed is not of class 'MetaboVariation'")
   }
    #Single metabolite model
   if(inherits(model,"meta.single_model")){
