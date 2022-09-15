@@ -107,7 +107,8 @@ MetaboVariation <- function ( data,individual_ids,metabolite,covariates=NULL,ite
     model <- parallel::mclapply(1:cores, function(i) {
       MCMCglmm::MCMCglmm(as.formula(formula),random = as.formula(paste("~us(1):",individual_ids)),data = new_data,pr=TRUE,nitt = iter,thin = thin,burnin = warmup)
     }, mc.cores=cores)
-    model <- lapply(model, function(m) m$Sol)
+    cov_count = length(covariates)
+    model <- lapply(model, function(m) m$Sol[,1:(1+cov_count)])
     model <- do.call(coda::mcmc.list, model)
     t = summary(model)
     rf = coda::gelman.diag(model)
@@ -158,7 +159,8 @@ MetaboVariation <- function ( data,individual_ids,metabolite,covariates=NULL,ite
         model <- parallel::mclapply(1:cores, function(i) {
           MCMCglmm::MCMCglmm(as.formula(formula),random = as.formula(paste("~us(1):",individual_ids)),data = new_data,pr=TRUE,nitt = iter,thin = thin,burnin = warmup)
         }, mc.cores=cores)
-        model <- lapply(model, function(m) m$Sol)
+        cov_count = length(covariates)
+        model <- lapply(model, function(m) m$Sol[,1:(1+cov_count)])
         model <- do.call(coda::mcmc.list, model)
         t = summary(model)
         rf = coda::gelman.diag(model)
