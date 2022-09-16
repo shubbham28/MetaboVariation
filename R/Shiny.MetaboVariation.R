@@ -117,7 +117,7 @@ Shiny.MetaboVariation <- function(){
                   shiny::tags$h6("Number of iterations represents the number of iterations per chain."),
                   shiny::tags$h6("Number of burn-in iterations specifies the number of iterations used for stepsize adaptation of the chains."),
                   shiny::tags$h6("Thinning means storing the k-th sample of the chain to achieve independent sampling."),
-                  shiny::tags$h6("Highest Posterior Distribution (HPD) interval is an interval within which an unobserved parameter value falls with a particular probability."),
+                  shiny::tags$h6("Highest Posterior Distribution (HPD) interval is the one with the smallest interval width among all credible intervals."),
                   shiny::actionButton("start_","Start Analysis"))
       })
     })
@@ -262,7 +262,7 @@ Shiny.MetaboVariation <- function(){
       )
     })
     # Plots
-    output$circos <- shiny::renderPlot(plot(m_single$result,type = "circos"))
+    output$circos <- shiny::renderPlot(plot(m_single$result,type = "circos"),width = 600,height = 600,res = 100)
     output$plot_metabolite_count_single <- plotly::renderPlotly(plot(m_single$result,type = "metabolites_count"))
     output$plot_metabolite_count_multiple <- plotly::renderPlotly(plot(model$result,type = "metabolites_count"))
     output$single_table <- shiny::renderDataTable(MetaboVariation::flagged.Individuals(m_single$result,data = main[['data']][,c(input$individual_id,input$covariates_categorical,input$covariates_continous,input$metabolites)], individual_id = individual_id()))
@@ -312,7 +312,7 @@ Shiny.MetaboVariation <- function(){
   }
 
   # Run the application
-  shinyApp(ui = ui, server = server)
+  shiny::shinyApp(ui = ui, server = server)
 
 }
 
