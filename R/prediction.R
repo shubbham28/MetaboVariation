@@ -67,7 +67,7 @@ prediction<-function(object,seed = NULL,nsim=nrow(object$Sol),newdata=NULL,level
       nfl<-object$Random$nfl[j]
       nrl<-object$Random$nrl[j]
       nat<-object$Random$nat[j]
-
+      set.seed((seed + i*nsim + j + i*j))
       Y<-matrix(rnorm(nrl*nfl),nrl,nfl)
 
       unew[1:(nrl*nfl)+cnt]<-as.vector(Y%*%chol(sqrt(matrix(object$VCV[it[i],cnt2+1:(nfl^2)],nfl,nfl))))
