@@ -9,22 +9,25 @@ prediction(
   seed = NULL,
   nsim = nrow(object$Sol),
   newdata = NULL,
-  level = 0.95,
-  verbose = FALSE
+  levels = c(0.91, 0.93, 0.95, 0.97, 0.99),
+  verbose = FALSE,
+  prior = prior
 )
 }
 \arguments{
 \item{object}{An object of class \code{\link{MetaboVariation}}.}
 
-\item{seed}{The seed for random number generation to make results reproducible. A seed is default to 19205033.}
+\item{seed}{The seed for random number generation to make results reproducible.}
 
 \item{nsim}{number of response vectors to simulate. Defaults to number of effective sample size of the model.}
 
 \item{newdata}{An optional data.frame for which to evaluate predictions. If NULL (default), the original data of the model is used.}
 
-\item{level}{A numeric scalar in the interval (0,1) giving the target probability content of the intervals.}
+\item{levels}{A numeric vector in the interval (0,1) giving the target probabilities content of the intervals.}
 
 \item{verbose}{logical; if TRUE, warnings are issued with newdata when the original model has fixed effects that do not appear in newdata and/or newdata has random effects not present in the original model.}
+
+\item{prior}{list of prior specifications having 4 possible elements: R (random effects of individuals) G (random errors of the model), B (fixed effects). B is a list containing the expected value (mu) and a (co)variance matrix (V) representing the strength of belief. The priors for the variance structures (R and G) are lists with the expected (co)variances (V) and degree of belief parameter (nu) for the inverse-Wishart where nu should be greater than number of metabolites.}
 }
 \value{
 A matrix of expectated values and Highest Posterior Distribution interval.
@@ -32,7 +35,4 @@ A matrix of expectated values and Highest Posterior Distribution interval.
 \description{
 Compute posterior draws of the posterior predictive distribution. Can be performed for the data used to fit the model (posterior predictive checks) or for new data.
 It is similar to the function \code{\link[MCMCglmm:predict.MCMCglmm]{predict}} from \code{\link[MCMCglmm]{MCMCglmm}} package.
-}
-\details{
-Title
 }

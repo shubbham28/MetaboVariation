@@ -1,7 +1,7 @@
 Package: MetaboVariation
 Title: Explore individual variation in metabolite levels using repeated measurements and Bayesian
     generalised linear models
-Version: 0.0.0.9000
+Version: 0.0.1.000
 Authors@R: c(person("Shubbham", "Gupta",email = "shubbham.gupta@ucdconnect.ie", role = c("aut", "cre")),
     person("Lorraine", "Brennan",email = "lorraine.brennan@ucd.ie", role = c("aut")),
     person("Isobel Claire", "Gormley",email = "claire.gormley@ucd.ie", role = c("aut")))
@@ -14,33 +14,27 @@ Description: Metabovariation flags individuals that have significant variation i
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 Imports: 
     circlize,
+    coda,
     ComplexHeatmap,
+    data.table,
+    doParallel,
     dplyr,
+    foreach,
+    ggplot2,
     grid,
     magrittr,
+    MCMCglmm,
     parallel,
-    doParallel,
-    foreach,
-    coda,
     plotly,
     reshape2,
-    MCMCglmm,
-    scales,
     stringr,
-    readxl,
-    tidyr,
-    shiny,
-    shinythemes,
-    writexl,
-    sortable,
-    ggplot2
+    tidyr
 Depends: 
     R (>= 2.10)
-LazyData: true
 Suggests: 
-    rmarkdown,
-    knitr
+    knitr,
+    rmarkdown
 VignetteBuilder: knitr

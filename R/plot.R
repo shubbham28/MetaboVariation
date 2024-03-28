@@ -1,282 +1,150 @@
-`%>%` <- magrittr::`%>%`
-globalVariables(c("timepoint","value"))
-unit = grid::unit
-
-#' @title
-#' Plots the flagged individuals for the metabolites.
-#' @description
-#' A function to plot the results after fitting a Bayesian generalised linear model (BGLM) model to data.
-#' Two types of plots can be produced depicting results from different perspectives.
+#' `%>%` <- magrittr::`%>%`
+#' `%like%` <- data.table::`%like%`
+#' globalVariables(c("metabolite","flag","original","timepoint","lower","upper","nonzero_count","n","total_count","percentage","value"))
 #'
-#' @param x An object of class \code{\link{MetaboVariation}}
-#' @param type A character specifying the plot type either \code{circos} or  \code{metabolites_count}. By default, \code{circos} is shown.
-#' @param timepoints A numeric vector denoting the timepoints to be shown in the plots. By default, it is NULL and will show all the timepoints.
-#' @param main Title for the plot.
-#' @param ... Further arguments are ignored.
+#' #' @title Plot Flagged Individuals for Metabolites
+#' #'
+#' #' @description
+#' #' This function generates plots to visualize the results obtained after fitting a MetaboVariation Model to metabolomics data.
+#' #' Two types of plots can be produced, each offering a different perspective on the results.
+#' #'
+#' #' @param x An object of class \code{\link{MetaboVariation}} containing the fitted model results.
+#' #' @param type A character specifying the type of plot to generate: either \code{radarplot} or \code{heatmap}.
+#' #' @param interval The interval for the Highest Posterior Distribution (HPD) that you want to visualize.
+#' #' @param cutoff The cutoff for the heatmap, based on timepoints. This parameter determines the threshold for including individuals based on the percentage of timepoints they are flagged in.
+#' #' It ranges from 0 to 100.
+#' #' @param threshold A positive integer indicating the minimum number of metabolites an individual must be flagged across different metabolites to be included in the heatmap.
+#' #' @param individual Used with \code{type = "radarplot"} to visualize data for a specific individual.
+#' #' @param ... Additional arguments to be passed to the plotting functions.
+#' #'
+#' #' @return This function will show the results of modelling in the following two ways:
+#' #' \itemize{
+#' #'   \item Radar plot - The radar plot provides an overview of an individual's metabolic profile across different timepoints. Individual's metabolic values depicted as a colored line while the remaining cohort are presented as gray lines. The shaded area indicates the posterior predictive HPD interval for the individual.
+#' #'   The metabolite where individual is flagged is marked by asterisk.
+#' #'   \item Heatmap plot: The heatmap illustrates the individuals flagged in the metabolites, with the shades of color indicating the frequency of flags across timepoints in the \code{\link{MetaboVariation}} object.
+#' #' }
+#' #' @seealso \code{\link{MetaboVariation}}
+#' #'
+#' #' @examples
+#' #' \dontrun{
+#' #' data(metabol.data)
+#' #' metabolite_list = colnames(metabol.data)[5:length(colnames(metabol.data))]
+#' #' metabolites = get.metabolites(list = metabolite_list)
+#' #' covariates = c("SexM.1F.2","Age","BMI")
+#' #' individual_id = "Individual_id"
+#' #' model = MetaboVariation(data = metabol.data,individual_ids = individual_id,
+#' #' metabolite = metabolites[1:3], covariates = covariates,full_posterior = TRUE)
+#' #' plot(x = model, type = "circos")
+#' #' plot(x = model, type = "metabolites_count",timepoints = c(1,2,4))
+#' #'}
+#' #'
+#' #' @export
+#' #' @aliases plot
+#' #' @method plot MetaboVariation
+#' #'
+#' #'
+#' plot.MetaboVariation <- function(x,type = NULL,interval = NULL, cutoff = NULL, threshold = 1, individual = NULL, ...){
+#'   if(!inherits(x,"MetaboVariation")){
+#'     stop("Model passed is not of class 'Metabovariation'")
+#'   }
+#'   if(type == "radarplot"){
+#'     test=x$result
+#'     plot_df = test[rownames(test) %like% individual,]
+#'     plot_df = plot_df[,c(paste0(c("lwr","upr"),interval),"original",paste0("flag",interval))]
+#'     plot_df = data.frame(plot_df)
+#'     colnames(plot_df) = c("lower","upper","value","flag")
+#'     plot_df$timepoint = gsub(".* (.*) .*","\\1",rownames(plot_df))
+#'     plot_df$metabolite = gsub(".* .* (.*)","\\1",rownames(plot_df))
+#'     original_df = test[!rownames(test) %like% individual,"original"]
+#'     original_df = data.frame(original_df)
+#'     colnames(original_df) = c("original")
+#'     original_df$timepoint = gsub(".* (.*) .*","\\1",rownames(original_df))
+#'     original_df$individual = gsub("(.*) .* .*","\\1",rownames(original_df))
+#'     original_df$metabolite = gsub(".* .* (.*)","\\1",rownames(original_df))
+#'     original_df = original_df[original_df$timepoint %in% unique(plot_df$timepoint),]
+#'     for (met in unique(plot_df$metabolite)) {
+#'       subdf = plot_df[plot_df$metabolite == met,]
+#'       s = c(unlist(subdf[,1:3]),original_df[original_df$metabolite == met,1])
+#'       # s = sapply(unlist(subdf[,1:3]), function(x){(x-min(unlist(subdf[,1:3])))/(max(unlist(subdf[,1:3]))-min(unlist(subdf[,1:3])))})
+#'       # s = sapply(s, function(x){x = x-mean(s)})
+#'       # subdf[,1:3] = matrix(sapply(s, function(x){(1-0)/(1+1)*(x+1)+0}),nrow = 4)
+#'       s = sapply(s, function(x){(x-min(s))/(max(s)-min(s))})
+#'       s = sapply(s, function(x){x = x-mean(s)})
+#'       s = sapply(s, function(x){(1-0)/(1+1)*(x+1)+0})
+#'       rows = nrow(plot_df[plot_df$metabolite == met,])
+#'       subdf[,1:3] = matrix(s[1:(3*rows)],nrow = rows)
+#'       plot_df[plot_df$metabolite == met,] = subdf
+#'       original_df[original_df$metabolite == met,1] = s[-(1:(3*rows))]
+#'     }
 #'
-#' @return This function will show the results of modelling in the following two ways:
-#' \itemize{
-#'   \item Circos plot - Plot showing the posterior predictive Highest Posterior Distribution (HPD) interval for all the individuals across timepoints. If the observed value
-#'   is outside the HPD interval, that bar will be flagged as black and the individual's id will be shown in __bold__ font.
-#'   \item Metabolites count plot - Bar plot that shows the number of individuals that are flagged in each timepoint for all metabolites in the \code{\link{MetaboVariation}} object.
+#'     flagged_metabolites <- plot_df %>%
+#'       dplyr::group_by(metabolite) %>%
+#'       dplyr::filter(any(flag == 1)) %>%
+#'       dplyr::distinct(metabolite)
+#'     flagged_metabolites = unique(c(unlist(flagged_metabolites),metabolites))
+#'     #plot_df = plot_df[plot_df$metabolite %in% flagged_metabolites,]
+#'     #original_df = original_df[original_df$metabolite %in% flagged_metabolites,]
+#'
+#'     metabolites = unique(plot_df$metabolite)
+#'     rows = nrow(plot_df)
+#'     plot_df = rbind(plot_df,plot_df[plot_df$metabolite == metabolites[1],])
+#'     plot_df[(rows+1):nrow(plot_df),"metabolite"] = "Z"
+#'     rows = nrow(original_df)
+#'     original_df = rbind(original_df,original_df[original_df$metabolite == metabolites[1],])
+#'     original_df[(rows+1):nrow(original_df),"metabolite"] = "Z"
+#'
+#'     ggplot2::ggplot()+
+#'       ggplot2::geom_line(data = original_df,ggplot2::aes(x=metabolite,y=original,group=individual),color="lightgray",alpha = 0.75,show.legend = FALSE)+
+#'       ggplot2::geom_line(data = plot_df,ggplot2::aes(x=metabolite,y=value,group=timepoint,color=timepoint),show.legend = FALSE)+
+#'       ggplot2::geom_line(data = plot_df,ggplot2::aes(x=metabolite,y=lower,group=timepoint,color=timepoint),linetype = "dashed",show.legend = FALSE)+
+#'       ggplot2::geom_line(data = plot_df,ggplot2::aes(x=metabolite,y=upper,group=timepoint,color=timepoint),linetype = "dashed",show.legend = FALSE)+
+#'       ggplot2::geom_ribbon(data = plot_df,ggplot2::aes(x=metabolite,y=value,group=timepoint,ymin=lower,ymax=upper,fill=timepoint),alpha=0.25,show.legend = FALSE)+
+#'       ggplot2::geom_text(data = plot_df,ggplot2::aes(x=metabolite,y=1,label=ifelse(metabolite!="Z",ifelse(flag==1,paste0(metabolite,"*"),metabolite),""),color = timepoint,fontface = ifelse(flag==1,"bold.italic","plain"),family = ifelse(flag==1,"serif","mono")),show.legend = FALSE)+
+#'       ggplot2::theme_light()+
+#'       ggplot2::coord_polar()+
+#'       ggplot2::labs(x="",y="")+
+#'       ggplot2::scale_y_continuous(breaks = NULL)+
+#'       ggplot2::facet_wrap(~timepoint)+ggplot2::scale_x_discrete(breaks = metabolites,labels=rep("",length(metabolites)),expand = c(0,0))+
+#'       ggplot2::theme(text = ggplot2::element_text(size = 20),panel.grid.major = ggplot2::element_line(linewidth = 0))
+#'   }
+#'
+#'   if(type == "heatmap"){
+#'     test= x$result
+#'     cutoff = as.numeric(cutoff)/100
+#'     subdf = test[,paste0("flag",interval)]
+#'     subdf = data.frame(subdf)
+#'     colnames(subdf) = c("flag")
+#'     subdf$individual = gsub("(.*) .* .*","\\1",rownames(subdf))
+#'     subdf$timepoint = gsub(".* (.*) .*","\\1",rownames(subdf))
+#'     subdf$metabolite = gsub(".* .* (.*)","\\1",rownames(subdf))
+#'     #subdf$flag = sapply(subdf$flag,function(x){ifelse(x==0,1,0)})
+#'     timepoints=length(unique(subdf$timepoint))
+#'     metabolite_flagged <- stats::aggregate(flag ~ individual + metabolite, data = subdf, FUN = sum)
+#'     #metabolite_flagged$flag = sapply(metabolite_flagged$flag,function(x){ifelse(x>=(timepoints*as.numeric(type)),"Yes","No")})
+#'     individuals = unique(metabolite_flagged[metabolite_flagged$flag>=(timepoints*as.numeric(cutoff)),"individual"])
+#'     metabolite_flagged$flag = factor(metabolite_flagged$flag)
+#'     metabolite_flagged = metabolite_flagged[metabolite_flagged$individual %in% individuals,]
+#'     flagged_metabolites <- metabolite_flagged %>%
+#'       dplyr::group_by(metabolite) %>%
+#'       dplyr::summarize(nonzero_count = sum(flag != 0), total_count = dplyr::n()) %>%
+#'       dplyr::mutate(percentage = nonzero_count / total_count) %>%
+#'       dplyr::filter(percentage > 0.1) %>%
+#'       dplyr::distinct(metabolite)
+#'     metabolite_flagged = metabolite_flagged[metabolite_flagged$metabolite %in% flagged_metabolites,]
+#'     flagged_individuals <- metabolite_flagged %>%
+#'       dplyr::group_by(individual) %>%
+#'       dplyr::summarize(nonzero_count = sum(flag != 0), total_count = dplyr::n()) %>%
+#'       dplyr:: mutate(percentage = nonzero_count / total_count) %>%
+#'       dplyr::filter(percentage > threshold/100) %>%
+#'       dplyr::distinct(individual)
+#'     metabolite_flagged = metabolite_flagged[metabolite_flagged$individual %in% unlist(flagged_individuals),]
+#'
+#'
+#'     color <- grDevices::colorRampPalette(c("white", "#2B7CE9"))(length(levels(metabolite_flagged$flag))+1)
+#'     names(color) = c("",levels(metabolite_flagged$flag))
+#'     ggplot2::ggplot(metabolite_flagged,ggplot2::aes(x=metabolite,y=individual,fill=flag))+ggplot2::geom_tile(color = "white")+
+#'       ggplot2::scale_fill_manual(values = color)+ggplot2::theme_minimal()+ggplot2::theme(text = ggplot2::element_text(size = 20),axis.text.x = ggplot2::element_text(angle = 90, hjust = 1))  + ggplot2::labs(x = "Metabolites",y="Individuals",fill = "Flag")
+#'
+#'   }
+#'
 #' }
-#' @seealso \code{\link{MetaboVariation}}
-
-#'
-#' @examples
-#' \dontrun{
-#' data(metabol.data)
-#' metabolite_list = colnames(metabol.data)[5:length(colnames(metabol.data))]
-#' metabolites = get.metabolites(list = metabolite_list)
-#' covariates = c("SexM.1F.2","Age","BMI")
-#' individual_id = "Individual_id"
-#' model = MetaboVariation(data = metabol.data,individual_ids = individual_id,
-#' metabolite = metabolites[1:3], covariates = covariates,full_posterior = TRUE)
-#' plot(x = model, type = "circos")
-#' plot(x = model, type = "metabolites_count",timepoints = c(1,2,4))
-#'}
-#'@aliases plot
-#' @method plot MetaboVariation
-#' @export
-#'
-plot.MetaboVariation <- function(x,type = "circos",timepoints = NULL,main = NULL, ...){
-  model = x
-  if(!inherits(model,"MetaboVariation")){
-    stop("Model passed is not of class 'Metabovariation'")
-  }
-  colors = grDevices::topo.colors(50)[seq(1, 50, 5)]
-  if(!(type %in% c("circos","metabolites_count"))){
-    stop("Invalid plot type")
-  }
-
-   #Single metabolite model
-  if(inherits(model,"meta.single_model")){
-
-    #Circos plot
-    if(type == "circos"){
-    values = cbind.data.frame(stringr::str_split_fixed(rownames(model$result),pattern=" ",n=2),model$result[,4])
-    status = cbind.data.frame(stringr::str_split_fixed(rownames(model$result),pattern=" ",n=2),model$result[,6])
-    colnames(values) = c("id","timepoint","value")
-    colnames(status) = c("id","timepoint","status")
-    values$timepoint = sapply(values$timepoint,function(x){as.numeric(gsub("[^0-9]", "",unique(x)))})
-    time_data = as.numeric(gsub("[^0-9]", "",unique(values$timepoint)))
-    if(!is.null(timepoints)){
-      if(!all(timepoints %in% time_data)){
-        stop("Timepoints passed are not present in the data")
-      }
-    }
-    values = tidyr::spread(values,timepoint,value)
-    status = tidyr::spread(status,timepoint,status)
-    size = cbind.data.frame(stringr::str_split_fixed(rownames(model$result),pattern=" ",n=2),model$result[,6])
-    colnames(size) = c("id","timepoint","status")
-    size = tidyr::spread(size,timepoint,status)
-    size[is.na(size)] = 1
-    size = apply(size[,-1],1,function(x){sum(x)%/%length(time_data)})
-    outliers = cbind.data.frame(stringr::str_split_fixed(rownames(model$result),pattern=" ",n=2),"identifier" = model$result[,6])
-
-    circlize::circos.clear()
-    circlize::circos.par(cell.padding=c(0,0,0,0),gap.degree=1,points.overflow.warning=F)
-    circlize::circos.initialize(letters[1], xlim = c(0, nrow(values)))
-    circlize::circos.track(ylim=c(0,1),bg.border=NA,track.height=.2,track.margin=c(.01,0),
-                           panel.fun=function(x,y)for(i in 1:nrow(values))
-                             circlize::circos.text(i,0,values$id[i],adj=c(0,.5),facing="clockwise",niceFacing=T,cex = ifelse(size[i] == 0, 0.75,0.5),font=ifelse(size[i] == 0, 4,1)))
-    if(is.null(timepoints)){
-      height = 0.75/ncol(values)
-      for (i in 2:ncol(values)) {
-        status[,i] = sapply(status[,i], function(x){ifelse(x==0,1,colors[i])})
-        circlize::circos.track(ylim = c(0,1),bg.border=NA,track.margin=c(0,0),track.height=height, panel.fun = function(x, y) {
-          limit = quantile(values[,i],c(0.25,0.75),na.rm = TRUE) + c(-1.5,+1.5)*IQR(values[,i],na.rm = TRUE)
-          value = values[,i]
-          # value[which(value < limit[1])] = limit[1]
-          # value[which(value > limit[2])] = limit[2]
-          value = scales::rescale(value)
-          circlize::circos.barplot(value, 1:nrow(values),border = "white",bar_width = 0.75, col = status[,i])
-        })
-        lgd = ComplexHeatmap::Legend(at = paste0("Timepoint",colnames(values)[2:ncol(values)]), type = "lines", legend_gp = grid::gpar(col = colors[2:ncol(values)], lwd = 3), title_position = "topleft", title = "Timepoints", ncol = 4)
-        ComplexHeatmap::draw(lgd, x = unit(0.2, "npc"), y = unit(0.05, "npc"), just = c("left", "bottom"))
-        if(!is.null(main)){
-          ComplexHeatmap::draw(ComplexHeatmap::Legend(at = main), x = unit(0.425, "npc"), y = unit(0.9, "npc"), just = c("left", "bottom"))
-        }
-      }
-    }
-    else if(is.numeric(timepoints) & max(timepoints) <= ncol(values)-1){
-
-      height = 0.6/length(timepoints)
-      for (i in timepoints) {
-        i = i+1
-        status[,i] = sapply(status[,i], function(x){ifelse(x==0,1,colors[i])})
-        circlize::circos.track(ylim = c(0,1),bg.border=NA,track.margin=c(0,0),track.height=height, panel.fun = function(x, y) {
-          limit = quantile(values[,i],c(0.25,0.75),na.rm = TRUE) + c(-1.5,+1.5)*IQR(values[,i],na.rm = TRUE)
-          value = values[,i]
-          # value[which(value < limit[1])] = limit[1]
-          # value[which(value > limit[2])] = limit[2]
-          value = scales::rescale(value)
-          circlize::circos.barplot(value, 1:nrow(values),border = "white",bar_width = 0.75, col = status[,i])
-        })
-        lgd = ComplexHeatmap::Legend(at = paste0("Timepoint",timepoints), type = "lines", legend_gp = grid::gpar(col = colors, lwd = 3), title_position = "topleft", title = "Timepoints", ncol = 4)
-        ComplexHeatmap::draw(lgd, x = unit(0.2, "npc"), y = unit(0.05, "npc"), just = c("left", "bottom"))
-        if(!is.null(main)){
-          ComplexHeatmap::draw(ComplexHeatmap::Legend(at = main), x = unit(0.425, "npc"), y = unit(0.9, "npc"), just = c("left", "bottom"))
-        }
-        }
-
-
-    }
-    }#End of Circos plot
-
-     # Metabolite count plot
-    if(type == "metabolites_count"){
-      individuals = c()
-      status = cbind.data.frame(stringr::str_split_fixed(rownames(model$result),pattern=" ",n=2),model$result[,6])
-      colnames(status) = c("id","timepoint","status")
-      time_data = as.numeric(gsub("[^0-9]", "",unique(status$timepoint)))
-      status = tidyr::spread(status,timepoint,status)
-      individuals = cbind(individuals,apply(!status[,-1],2,function(x){ifelse(x==FALSE | is.na(x),0,1)}))
-      sum_m = apply(individuals,2,sum)
-      if(!is.null(timepoints)){
-        if(!all(timepoints %in% time_data)){
-          stop("Timepoints passed are not present in the data")
-        }
-      }
-      if(is.null(timepoints)){
-      sum_plot = data.frame(sum_m)
-      rownames(sum_plot) = paste0("Timepoint ",1:length(sum_m))
-      }
-      else if(is.numeric(timepoints) & max(timepoints) <= ncol(status)-1){
-        sum_plot = data.frame(sum_m[timepoints])
-        sum_plot$Timepoint = paste0("Timepoint ",timepoints)
-        colnames(sum_plot) = c("sum_m","Timepoint")
-      }
-      sum_plot$Timepoint = rownames(sum_plot)
-      plotly::plot_ly(sum_plot,x = ~Timepoint, y = ~sum_m, type = "bar",marker = list(color=colors[1],width = 0.2)) %>%
-        plotly::layout(yaxis = list(title = 'No. of individuals flagged',showgrid = FALSE,showline = TRUE))
-    }    # End Metabolite count plot
-
-  }
-
-  # Multiple metabolite model
-  else if(inherits(model,"meta.multi_model")) {
-
-    #Circos plot
-    if(type == "circos"){
-      for (met in names(model)) {
-      values = cbind.data.frame(stringr::str_split_fixed(rownames(model[[met]]$result),pattern=" ",n=2),model[[met]]$result[,4])
-      status = cbind.data.frame(stringr::str_split_fixed(rownames(model[[met]]$result),pattern=" ",n=2),model[[met]]$result[,6])
-      colnames(values) = c("id","timepoint","value")
-      colnames(status) = c("id","timepoint","status")
-      values$timepoint = sapply(values$timepoint,function(x){as.numeric(gsub("[^0-9]", "",unique(x)))})
-      time_data = as.numeric(gsub("[^0-9]", "",unique(values$timepoint)))
-      if(!is.null(timepoints)){
-        if(!all(timepoints %in% time_data)){
-          stop("Timepoints passed are not present in the data")
-        }
-      }
-
-      values = tidyr::spread(values,timepoint,value)
-      status = tidyr::spread(status,timepoint,status)
-      size = cbind.data.frame(stringr::str_split_fixed(rownames(model[[met]]$result),pattern=" ",n=2),model[[met]]$result[,6])
-      colnames(size) = c("id","timepoint","status")
-      size = tidyr::spread(size,timepoint,status)
-      size[is.na(size)] = 1
-      size = apply(size[,-1],1,function(x){sum(x)%/%length(time_data)})
-      outliers = cbind.data.frame(stringr::str_split_fixed(rownames(model[[met]]$result),pattern=" ",n=2),"identifier" = model[[met]]$result[,6])
-
-      circlize::circos.clear()
-      circlize::circos.par(cell.padding=c(0,0,0,0),gap.degree=1,points.overflow.warning=F)
-      circlize::circos.initialize(letters[1], xlim = c(0, nrow(values)))
-      circlize::circos.track(ylim=c(0,1),bg.border=NA,track.height=.2,track.margin=c(.01,0),
-                             panel.fun=function(x,y)for(i in 1:nrow(values))
-                               circlize::circos.text(i,0,values$id[i],adj=c(0,.5),facing="clockwise",niceFacing=T,cex = ifelse(size[i] == 0, 0.75,0.5),font=ifelse(size[i] == 0, 4,1)))
-      if(is.null(timepoints)){
-        height = 0.75/ncol(values)
-        for (i in 2:ncol(values)) {
-          status[,i] = sapply(status[,i], function(x){ifelse(x==0,1,colors[i])})
-          circlize::circos.track(ylim = c(0,1),bg.border=NA,track.margin=c(0,0),track.height=height, panel.fun = function(x, y) {
-            limit = quantile(values[,i],c(0.25,0.75),na.rm = TRUE) + c(-1.5,+1.5)*IQR(values[,i],na.rm = TRUE)
-            value = values[,i]
-            # value[which(value < limit[1])] = limit[1]
-            # value[which(value > limit[2])] = limit[2]
-            value = scales::rescale(value)
-            circlize::circos.barplot(value, 1:nrow(values),border = "white",bar_width = 0.75, col = status[,i])
-          })
-          lgd = ComplexHeatmap::Legend(at = paste0("Timepoint",colnames(values)[2:ncol(values)]), type = "lines", legend_gp = grid::gpar(col = colors[2:ncol(values)], lwd = 3), title_position = "topleft", title = "Timepoints", ncol = 4)
-          ComplexHeatmap::draw(lgd, x = unit(0.2, "npc"), y = unit(0.05, "npc"), just = c("left", "bottom"))
-          if(!is.null(main)){
-            ComplexHeatmap::draw(ComplexHeatmap::Legend(at = main), x = unit(0.425, "npc"), y = unit(0.9, "npc"), just = c("left", "bottom"))
-          }
-          }
-      }
-      else if(is.numeric(timepoints) & max(timepoints) <= ncol(values)-1){
-
-        height = 0.6/length(timepoints)
-        for (i in timepoints) {
-          i = i+1
-          status[,i] = sapply(status[,i], function(x){ifelse(x==0,1,colors[i])})
-          circlize::circos.track(ylim = c(0,1),bg.border=NA,track.margin=c(0,0),track.height=height, panel.fun = function(x, y) {
-            limit = quantile(values[,i],c(0.25,0.75),na.rm = TRUE) + c(-1.5,+1.5)*IQR(values[,i],na.rm = TRUE)
-            value = values[,i]
-            # value[which(value < limit[1])] = limit[1]
-            # value[which(value > limit[2])] = limit[2]
-            value = scales::rescale(value)
-            circlize::circos.barplot(value, 1:nrow(values),border = "white",bar_width = 0.75, col = status[,i])
-          })
-          lgd = ComplexHeatmap::Legend(at = paste0("Timepoint",timepoints), type = "lines", legend_gp = grid::gpar(col = colors, lwd = 3), title_position = "topleft", title = "Timepoints", ncol = 4)
-          ComplexHeatmap::draw(lgd, x = unit(0.2, "npc"), y = unit(0.05, "npc"), just = c("left", "bottom"))
-          if(!is.null(main)){
-            ComplexHeatmap::draw(ComplexHeatmap::Legend(at = main), x = unit(0.425, "npc"), y = unit(0.9, "npc"), just = c("left", "bottom"))
-          }
-          }
-
-      }
-
-
-    }#End of for loop
-    }#End of Circos plot
-
-    # Metabolite count plot
-    if(type == "metabolites_count"){
-      individuals = c()
-      for (met in names(model)) {
-        status = cbind.data.frame(stringr::str_split_fixed(rownames(model[[met]]$result),pattern=" ",n=2),model[[met]]$result[,6])
-        colnames(status) = c("id","timepoint","status")
-        time_data = as.numeric(gsub("[^0-9]", "",unique(status$timepoint)))
-        if(!is.null(timepoints)){
-          if(!all(timepoints %in% time_data)){
-            stop("Timepoints passed are not present in the data")
-          }
-        }
-        status = tidyr::spread(status,timepoint,status)
-        individuals = cbind(individuals,apply(!status[,-1],2,function(x){ifelse(x==FALSE | is.na(x),0,1)}))
-      }
-
-      sum_m = apply(individuals,2,sum)
-      sum_plot = c()
-      if(is.null(timepoints)){
-        timepoints = length(sum_m)%/%length(names(model))
-        timepoints = 1:timepoints
-      }
-      for (met in names(model)) {
-        sum_plot = rbind.data.frame(sum_plot,c(model[[met]]$metabolite,sum_m[paste(model[[met]]$metabolite,"_",timepoints,sep = "")]))
-
-      }
-      colnames(sum_plot) = c("Metabolites",paste0("Timepoint.",timepoints))
-      for (i in 2:ncol(sum_plot)) {
-        sum_plot[,i] = as.numeric(sum_plot[,i])
-      }
-    #  sum_plot = reshape2::melt(sum_plot,id.vars = "Metabolites", variable.name = "Timepoints",value.name = "count")
-      #return(sum_plot)
-     # figure = ggplot2::ggplot(sum_plot, ggplot2::aes(fill=Timepoints, y=count, x=Metabolites)) +  ggplot2::geom_bar(position="dodge", stat="identity")
-      #print(figure)
-      #plotly::ggplotly(figure)
-     figure = plotly::plot_ly(x = sum_plot[["Metabolites"]],y = sum_plot[[paste0("Timepoint.",timepoints[1])]], type = "bar",marker = list(color=colors[timepoints[1]]),width = 0.2,name = paste0("Timepoint ",timepoints[1])) %>%
-      plotly::layout(yaxis = list(title = 'No. of individuals flagged',showgrid = FALSE,showline = TRUE,range = c(min(sum_plot[,-1]) - 1,max(sum_plot[,-1]) + 1)), barmode = 'group')
-      for (i in 2:length(timepoints)) {
-      figure = figure %>% plotly::add_trace(y = sum_plot[[paste0("Timepoint.",timepoints[i])]],marker = list(color=colors[i]),width = 0.2,name = paste0("Timepoint ",timepoints[i]))
-      }
-      return(plotly::config(plotly::as_widget(figure)))
-    }    # End Metabolite count plot
-
-  }
-
-
-}

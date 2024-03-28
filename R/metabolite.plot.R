@@ -27,7 +27,7 @@ metabolite.plot <- function(data, metabolite,main=''){
 
   if (length(metabolite)>1){
     for (item in metabolite) {
-      plot_list = na.omit(stringr::str_extract(col_list,stringr::regex(paste(".*",item,".*",sep = ""))))
+      plot_list = stats::na.omit(stringr::str_extract(col_list,stringr::regex(paste(".*",item,".*",sep = ""))))
       new_data = reshape2::melt(data,measure.vars = plot_list,variable.name = "occurrence",value.name = "measurement")
       levels(new_data$occurrence) = paste0("Timepoint ",1:length(levels(new_data$occurrence)))
       print(new_data %>% plotly::plot_ly(x=~occurrence,y=~measurement,split=~occurrence,type="violin",points = FALSE) %>% plotly::layout(title = main,
@@ -36,7 +36,7 @@ metabolite.plot <- function(data, metabolite,main=''){
     }
   }
   else{
-    plot_list = na.omit(stringr::str_extract(col_list,stringr::regex(paste(".*",metabolite,".*",sep = ""))))
+    plot_list = stats::na.omit(stringr::str_extract(col_list,stringr::regex(paste(".*",metabolite,".*",sep = ""))))
     new_data = reshape2::melt(data,measure.vars = plot_list,variable.name = "occurrence",value.name = "measurement")
     levels(new_data$occurrence) = paste0("Timepoint ",1:length(levels(new_data$occurrence)))
     new_data %>% plotly::plot_ly(x=~occurrence,y=~measurement,split=~occurrence,type="violin",points = FALSE) %>% plotly::layout(title = main,
