@@ -2,34 +2,39 @@
 % Please edit documentation in R/radar.plot.R
 \name{radar.plot}
 \alias{radar.plot}
-\title{Plot a radarplot showing metabolic profile of an individual across all timepoints.}
+\title{Radar plot for an individual.}
 \usage{
 radar.plot(model, interval, individual, title = "")
 }
 \arguments{
 \item{model}{An object of class \code{\link{MetaboVariation}} containing the fitted model results.}
 
-\item{interval}{The interval for the Highest Posterior Distribution (HPD) that you want to visualize.}
+\item{interval}{The interval for the Highest Posterior Distribution (HPD) that you want to visualise.}
 
-\item{individual}{ID for individual you want to visualize}
+\item{individual}{The ID for individual you want to visualise.}
 
 \item{title}{Title to plot}
 }
 \value{
-Returns a radarplot for an specific individual at specified interval
+Returns a radar plot for a specific individual at the specified interval.
 }
 \description{
-Plot a radarplot showing metabolic profile of an individual across all timepoints.
+Visualise a radar plot showing the metabolic profile of an individual across all time points and for all metabolites.
 }
 \examples{
 \dontrun{
+# Load the simulated data and extract the metabolites names.
 data(metabol.data)
 metabolite_list = colnames(metabol.data)[5:length(colnames(metabol.data))]
 metabolites = get.metabolites(list = metabolite_list)
 covariates = c("SexM.1F.2","Age","BMI")
 individual_id = "Individual_id"
+
+# Run the MetaboVariation.
 model = MetaboVariation(data = metabol.data,individual_ids = individual_id,
 metabolite = metabolites[1:3], covariates = covariates,cutoff=c(0.95,0.975,0.99))
+
+# Visualise the radar plot.
 radarplor(model,interval=0.975,individual = 3)
 }
 }

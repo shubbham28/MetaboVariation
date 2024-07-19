@@ -2,95 +2,101 @@
 % Please edit documentation in R/MetaboVariation.R
 \name{MetaboVariation}
 \alias{MetaboVariation}
-\title{Fits a Bayesian generalised linear model to repeated measurements of metabolites.}
+\title{Fit a Bayesian Generalised Linear Model to repeated measurements of metabolites.}
 \usage{
 MetaboVariation(
   data,
   individual_ids,
   metabolites,
   covariates = NULL,
+  type = "dependent",
   iter = 5000,
   warmup = 2000,
   thin = 2,
   cutoff = c(0.95, 0.975, 0.99),
   cores = NULL,
-  seed = NULL,
-  type = "dependent",
   n_chains = 4,
   prior = NULL
 )
 }
 \arguments{
-\item{data}{A data frame containing data of all variables to be used in the BGLM. You can refer \code{\link{metabol.data}} for structure of the data.}
+\item{data}{A data frame containing data of all variables to be used in the BGLM. Refer to \code{\link{metabol.data}} for the structure of the data.}
 
-\item{individual_ids}{A character string detailing the name of the column in the data that contains the individual ids.}
+\item{individual_ids}{A character string detailing the name of the column in the data that contains the individual IDs.}
 
-\item{metabolites}{A string or vector of string containing the name of metabolites to model.}
+\item{metabolites}{A string or vector of strings containing the names of metabolites to model.}
 
-\item{covariates}{A list of string containing the name of columns in the data that contains the covariates.}
+\item{covariates}{A list of strings containing the names of columns in the data that contain the covariates.}
 
-\item{iter}{Number of total iterations per chain (including warmup; defaults to 2000).}
+\item{type}{Determines whether to model with or without considering the correlation among metabolites. Options: "dependent" or "independent".}
 
-\item{warmup}{A positive integer specifying number of warmup iterations. This also specifies the number of iterations used for stepsize
-adaptation, so warmup draws should not be used for inference. The number
-of warmup should not be larger than \code{iter} and the default is
+\item{iter}{The number of total iterations per chain (including warmup; defaults to 2000).}
+
+\item{warmup}{A positive integer specifying the number of warmup iterations. This also specifies the number of iterations used for step size adaptation, so warmup draws should not be used for inference. The value of warmup should not be larger than \code{iter} and the default is
 \code{iter/2}.}
 
 \item{thin}{Thinning rate. Must be a positive integer. Set thin > 1 to save memory and computation time if \code{iter} is large.}
 
-\item{cutoff}{A list of cutoff for the width of Highest Posterior Distribution interval of the posterior predictive distribution. The value should be less than 1. Default cutoff are set to a list of (0.91,0.93,0.95,0.97,0.99)}
+\item{cutoff}{A list of cutoffs for the width of the highest posterior distribution interval of the posterior predictive distribution. The value should be less than 1. Default cutoffs are set to 0.95, 0.97, and 0.99.}
 
-\item{cores}{Number of cores to use when executing the chains in parallel, which defaults to half of the total cores you have in the system.}
+\item{cores}{The number of cores to use when fitting the models in parallel, which defaults to half of the total cores you have in the system.}
 
-\item{seed}{The seed for random number generation to make results reproducible. A seed is default to 19205033.}
+\item{n_chains}{Number of chains to use when fitting the model.}
 
-\item{type}{Determines whether to model with or without considering the correlation among metabolites. Options: "dependent" or "independent".}
-
-\item{n_chains}{Number of chains to use in the model.}
-
-\item{prior}{list of prior specifications having 4 possible elements: R (random effects of individuals) G (random errors of the model), B (fixed effects). B is a list containing the expected value (mu) and a (co)variance matrix (V) representing the strength of belief. The priors for the variance structures (R and G) are lists with the expected (co)variances (V) and degree of belief parameter (nu) for the inverse-Wishart where nu should be greater than number of metabolites.}
+\item{prior}{A list of prior specifications with 3 elements: R (random effects of individuals), G (random errors of the model), B (fixed effects). B is a list containing the expected value (mu) and a (co)variance matrix (V) representing the strength of belief. The priors for the variance structures (R and G) are lists with the expected (co)variances (V) and a degree of belief parameter (nu) for the inverse-Wishart, where nu should be greater than the number of metabolites.}
 }
 \value{
-The function returns an object of \code{\link{MetaboVariation}}. The Following values are returned for each metabolite object.
+The function returns an object of \code{\link{MetaboVariation}}. The following values are returned for each metabolite object.
 \itemize{
-\item model - contains intermediate statistical models used to see the convergence.
-\item type - shows which modelling is done. It can be either "dependent" or "independent"
-\item significant_covariates - a list of covariates that have significant relationship (at the 95\% level) with the metabolites.
-\item result - a summary of the posterior predictive distributions of the individuals in the cohort. The result contains the mean, \code{cutoff} \% HPD interval width, tails of the HPD interval and the observed value of the metabolite for the individual for that timepoint. The result also has a binary flag that shows whether the observed value lies within the HPD interval or not where 1 denotes the observed value lies in the interval and 0 denotes the observed value lies outside the interval.
-\item chain_convergence - the potential scale reduction statistic, also known as the Gelman-Rubin statistic which measures the extent to which chains are converging. The further the value of the statistic from 1, the poorer the convergence of the chains. The MCMC chains are considered converged if the value lies between 0.9 and 1.05.
+\item model - contains BGLM model outputs.
+\item type - shows which model is has been fitted.. It can be either "dependent" or "independent".
+\item significant_covariates - a data frame containing the estimates and 95\% confidence intervals for each covariate across all metabolites along with a binary flag indicating whether each covariate is significant for the corresponding metabolite.
+\item result - a data frame containing the posterior predictive distributions of the individuals in the cohort. The data frame contains the mean, \code{cutoff} \% HPD interval width, the lower and upper bounds of the HPD interval and the observed value of the metabolite for the individual for that timepoint. The result also has a binary flag that shows whether the observed value lies within the HPD interval or not where 1 denotes the observed value lies outside the interval and 0 denotes the observed value lies in the interval.
+\item chain_convergence - the potential scale reduction factor, also known as the Gelman-Rubin statistic which measures the extent to which chains are converged. The further the value of the statistic from 1, the poorer the convergence of the chains. The MCMC chains are considered converged if the value lies between 0.9 and 1.05.
 }
 }
 \description{
 Implements a Bayesian generalised linear model (BGLM) to flag individuals with notable variation in their metabolite levels.
 }
 \details{
-The Bayesian generalised linear model (BGLM) is used to identify individuals with variations in their
-metabolite levels. The BGLM can include covariates and learns the intra-individual variation in metabolite levels from the repeated measurements.
+Implements a Bayesian Generalised Linear Model (BGLM) to flag individuals with intra-individual variation in their metabolite levels.
+The BGLM can include covariates and learns the intra-individual variation in metabolite levels from the repeated measurements.
 Posterior predictive distributions of metabolite levels at the individual level are provided. These are used to identify individuals with observed metabolite level outside the
-\code{cutoff}\% Highest Posterior Distribution (HPD) interval at one time point; such individuals with notable variation are flagged.
-The model builds on the Bayesian framework using the function \code{\link[MCMCglmm:MCMCglmm]{MCMCglmm}} from the \code{\link[MCMCglmm]{MCMCglmm}} package.
+\code{cutoff}\% highest posterior distribution (HPD) interval at one time point; such individuals with notable variation are flagged.
+The model builds on the Bayesian framework using the \code{\link[MCMCglmm:MCMCglmm]{MCMCglmm}} function from the \code{\link[MCMCglmm]{MCMCglmm}} package.
 
-The BGLM models the metabolite value \eqn{y^m_{it}} for the individual \eqn{i} at timepoint \eqn{t},
+For dependent model, we assume the metabolite values of \eqn{M} metabolites from \eqn{N} individuals at \eqn{T} time points, organised into a matrix \eqn{\boldsymbol{Y}} of dimension \eqn{(N \times T) \times M} which is fitted by BGLM as follows,
+\deqn{\boldsymbol{Y} = \boldsymbol{X} \boldsymbol{\beta} + \boldsymbol{S} + \boldsymbol{\epsilon}}
+where the matrix \eqn{\boldsymbol{X}} contains the \eqn{L} covariates, the \eqn{(L+1) \times M} matrix \eqn{\boldsymbol{\beta}} represents the regression coefficients and the matrix \eqn{\boldsymbol{S}} (of dimension \eqn{(N \times T) \times M)} captures the random effects of all individuals at each time point and each metabolite. Here, \eqn{\boldsymbol{S} = \boldsymbol{Z}\boldsymbol{u}} where \eqn{\boldsymbol{Z}} is the \eqn{(N \times T) \times (N \times M)} binary design matrix and \eqn{\boldsymbol{u}} contains the random effects for the metabolites. The term \eqn{\boldsymbol{\epsilon}} represents the random error associated with each measurement.
+
+For independent model, the BGLM models the metabolite value \eqn{y^m_{it}} for the individual \eqn{i} at timepoint \eqn{t},
 \deqn{ y^m_{it} = \beta_{0} + \sum_{l=1}^L\beta_{1,l}x_{il} + S_{it} + \epsilon_{it}}
 
-where \eqn{y^m_{it}} is the metabolite level for individual \eqn{i} at time point \eqn{t}, the term \eqn{x_{il}} is the covariate \eqn{l \in 1, 2, ..., L} for individual \eqn{i}. The term \eqn{\beta_0} is the mean intercept, while \eqn{\beta_{1,l}} is the regression coefficient for the covariate \eqn{l}. The random effect for the \eqn{i^{th}} individual is denoted by \eqn{S_{it}} for timepoint \eqn{t} and \eqn{\epsilon_{it}} is the random error for individual \eqn{i} at timpoint \eqn{t} assumed \eqn{\epsilon_{ij} \sim N(0,\sigma^2)}.
+where \eqn{y^m_{it}} is the metabolite level for individual \eqn{i} at time point \eqn{t}, the term \eqn{x_{il}} is the covariate \eqn{l \in 1, 2, ..., L} for individual \eqn{i}. The term \eqn{\beta_0} is the mean intercept, while \eqn{\beta_{1,l}} is the regression coefficient for the covariate \eqn{l}. The random effect for the \eqn{i^{th}} individual is denoted by \eqn{S_{it}} for timepoint \eqn{t} and \eqn{\epsilon_{it}} is the random error for individual \eqn{i} at time point \eqn{t} assumed \eqn{\epsilon_{ij} \sim N(0,\sigma^2)}.
 }
 \examples{
 \dontrun{
+# Load the simulated data and extract the metabolites names.
 data(metabol.data)
 metabolite_list = colnames(metabol.data)[5:length(colnames(metabol.data))]
 metabolites = get.metabolites(list = metabolite_list)
 covariates = c("SexM.1F.2","Age","BMI")
 individual_id = "Individual_id"
+
+# Run the MetaboVariation under dependent setting.
 model = MetaboVariation(data = metabol.data,individual_ids = individual_id,
-metabolite = metabolites[1], covariates = covariates)
+metabolite = metabolites[1:5], covariates = covariates,type="dependent")
+
+# Run the MetaboVariation under independent setting.
 model = MetaboVariation(data = metabol.data,individual_ids = individual_id,
-metabolite = metabolites[1:3])
+metabolite = metabolites[1], covariates = covariates,type="independent")
 }
 
 }
 \references{
 Hadfield, J. D. (2010). MCMC Methods for Multi-Response Generalized Linear Mixed Models: The MCMCglmm R Package. Journal of Statistical Software, 33(2), 1–22. https://doi.org/10.18637/jss.v033.i02
+
+Andrew Gelman, Donald B. Rubin "Inference from Iterative Simulation Using Multiple Sequences," Statistical Science, Statist. Sci. 7(4), 457-472,
 }
 \seealso{
 \code{\link{radar.plot}}, \code{\link{circos.plot}}, \code{\link{metabolite.heatmap}}

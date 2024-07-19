@@ -1,29 +1,28 @@
 #' @title
 #' Predict method for mixed models fitted with MCMCglmm in MetaboVariation.
 #' @description
-#' Compute posterior draws of the posterior predictive distribution. Can be performed for the data used to fit the model (posterior predictive checks) or for new data.
-#' It is similar to the function \code{\link[MCMCglmm:predict.MCMCglmm]{predict}} from \code{\link[MCMCglmm]{MCMCglmm}} package.
-
+#' Compute posterior draws of the posterior predictive distribution. Can be performed for the data used to fit the model (posterior predictive checks) or for new data. It is similar to the \code{\link[MCMCglmm:predict.MCMCglmm]{predict}} function from the \code{\link[MCMCglmm]{MCMCglmm}} package.
+#'
 #' @param object An object of class \code{\link{MetaboVariation}}.
-#' @param seed The seed for random number generation to make results reproducible.
-#' @param nsim number of response vectors to simulate. Defaults to number of effective sample size of the model.
+# #' @param seed The seed for random number generation to make results reproducible.
+#' @param nsim Number of response vectors to simulate. Defaults to the number of effective sample size of the model.
 #' @param newdata An optional data.frame for which to evaluate predictions. If NULL (default), the original data of the model is used.
-#' @param levels A numeric vector in the interval (0,1) giving the target probabilities content of the intervals.
+#' @param levels A numeric vector in the interval (0, 1) giving the target probabilities content of the intervals.
 #' @param verbose logical; if TRUE, warnings are issued with newdata when the original model has fixed effects that do not appear in newdata and/or newdata has random effects not present in the original model.
 #' @param prior list of prior specifications having 4 possible elements: R (random effects of individuals) G (random errors of the model), B (fixed effects). B is a list containing the expected value (mu) and a (co)variance matrix (V) representing the strength of belief. The priors for the variance structures (R and G) are lists with the expected (co)variances (V) and degree of belief parameter (nu) for the inverse-Wishart where nu should be greater than number of metabolites.
 
 #' @return A matrix of expectated values and Highest Posterior Distribution interval.
 #'
-#'
-prediction<-function(object,seed = NULL,nsim=nrow(object$Sol),newdata=NULL,levels = c(0.91,0.93,0.95,0.97,0.99),verbose = FALSE,prior=prior){
-    if(!is.null(seed)){
-      if(!is.numeric(seed)){
-        stop("seed must be an integer")
-      }
-    }else{
-      seed = 19205033
-    }
-    set.seed(seed)
+#' @noRd
+prediction<-function(object,nsim=nrow(object$Sol),newdata=NULL,levels = c(0.91,0.93,0.95,0.97,0.99),verbose = FALSE,prior=prior){
+    # if(!is.null(seed)){
+    #   if(!is.numeric(seed)){
+    #     stop("seed must be an integer")
+    #   }
+    # }else{
+    #   seed = 19205033
+    # }
+    # set.seed(seed)
     if(!is.null(newdata)){
       suppressWarnings(object2<-MCMCglmm::MCMCglmm(fixed=object$Fixed$formula, random=object$Random$formula, rcov=object$Residual$formula, family=object$Residual$original.family, prior = prior,data=newdata, nitt=1, thin=1, burnin=0, ginverse=object$ginverse, verbose=FALSE, pr=TRUE, start=list(QUASI=FALSE)))
       find.fixed<-match(colnames(object2$Sol)[1:object2$Fixed$nfl], colnames(object$Sol))

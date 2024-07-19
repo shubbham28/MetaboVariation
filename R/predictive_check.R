@@ -1,33 +1,40 @@
 globalVariables(c("Model","variable"))
-#' Performs posterior predictive check for two MetaboVariation objects
-#'
+#' @title Using posterior predictive checks to assess the model fit of 2 MetaboVariation models.
+#' @description
+#' This function performs posterior predictive checks to compare the model fit of two MetaboVariation models by generating replicated datasets from both models and computing the mean absolute differences between correlation matrices for the original and replicated datasets at each time point.
 #' @param data A data frame containing data of all variables to be used in the BGLM.
 #' @param model1 An object of class \code{\link{MetaboVariation}} containing the fitted model results.
-#' @param model2 A different object of class \code{\link{MetaboVariation}} containing the fitted model results.
+#' @param model2 Another object of class \code{\link{MetaboVariation}} containing the fitted model results.
 #' @param timepoints A list of time points present in the data.
-#' @param metabolites A string or vector of string containing the name of metabolites to model.
-#' @param replication number of replicated data set to make. Defaults to 100. Should be less than effective sample size.
+#' @param metabolites A string or vector of strings containing the names of metabolites to model.
+#' @param replication number of replicate datasets to generate. Defaults to 100. Should be less than effective sample size, calculated as (number of iterations - number of warmup iterations) / thinning rate.
+#' @param model1_name Name for Model 1
+#' @param model2_name Name for Model 2
 #'
-#' @return A boxplot comparing the differences between two \code{\link{MetaboVariation}} objects. Replicated datasets are created from both models,
-#' generating a correlation matrix of the original dataset and replicated dataset for each timepoint. The boxplot displays the mean absolute difference for each timepoint.
+#' @return A box plot comparing the differences between two \code{\link{MetaboVariation}} objects. Replicated datasets are created from both models, generating a correlation matrix between the original dataset and each replicated dataset for both models at each time point. The box plot displays the mean absolute difference for both models.
 #' @export
 #'
 #' @examples
 #'\dontrun{
+#' # Load the simulated data and extract the metabolites names.
 #' data(metabol.data)
 #' metabolite_list = colnames(metabol.data)[5:length(colnames(metabol.data))]
 #' metabolites = get.metabolites(list = metabolite_list)
 #' covariates = c("SexM.1F.2","Age","BMI")
 #' individual_id = "Individual_id"
-#' model = MetaboVariation(data = metabol.data,individual_ids = individual_id,
-#' metabolite = metabolites[1], covariates = covariates)
+#'
+#' # Run the MetaboVariation model 1.
 #' model1 = MetaboVariation(data = metabol.data,individual_ids = individual_id,
 #' metabolite = metabolites[1:3],type="dependent")
+#'
+#' # Run the MetaboVariation model 2.
 #' model2 = MetaboVariation(data = metabol.data,individual_ids = individual_id,
 #' metabolite = metabolites[1:3],type="independent")
+#'
+#' # Perform predictive check between two models
 #' predictive_check(metabol.data, model1, model2, c(1,2,3,4), metabolites)
 #' }
-predictive_check <- function(data,model1,model2,timepoints,metabolites,replication=100){
+predictive_check <- function(data,model1,model2,timepoints,metabolites,replication=100,model1_name = "Model 1",model2_name = "Model 2"){
   if(!inherits(model1,"MetaboVariation")){
     stop("Model passed is not of class 'Metabovariation'")
   }
@@ -88,7 +95,7 @@ predictive_check <- function(data,model1,model2,timepoints,metabolites,replicati
   mad_model1 = reshape2::melt(mad_model1)
   mad_model2 = reshape2::melt((mad_model2))
   plotdf = rbind(mad_model1,mad_model2)
-  plotdf$Model = c(rep("Model 1",nrow(mad_model1)),rep("Model 2",nrow(mad_model2)))
+  plotdf$Model = c(rep(model1_name,nrow(mad_model1)),rep(model2_name,nrow(mad_model2)))
   ggplot2::ggplot(plotdf,ggplot2::aes(x=variable,y=value,color = Model))+ggplot2::geom_boxplot() + ggplot2::labs(colour ="Model",x="Timepoint",y="MAD") + ggplot2::theme_classic()
 
 }

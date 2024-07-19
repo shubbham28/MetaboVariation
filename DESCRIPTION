@@ -1,16 +1,13 @@
 Package: MetaboVariation
-Title: Explore individual variation in metabolite levels using repeated measurements and Bayesian
-    generalised linear models
-Version: 0.0.1.000
+Title: Explore Individual Variation in Metabolite Levels using Repeated Measurements and Bayesian Generalised Linear Models
+Version: 1.0
 Authors@R: c(person("Shubbham", "Gupta",email = "shubbham.gupta@ucdconnect.ie", role = c("aut", "cre")),
     person("Lorraine", "Brennan",email = "lorraine.brennan@ucd.ie", role = c("aut")),
     person("Isobel Claire", "Gormley",email = "claire.gormley@ucd.ie", role = c("aut")))
-Description: Metabovariation flags individuals that have significant variation in their
-    metabolite levels based on assessment of repeated measures of metabolites. A  
-    Bayesian generalised linear model (BGLM) is used to identify individuals with 
-    variations in their metabolite levels and the model can include covariates such 
-    as sex or age. Individuals are flagged when their metabolite levels lie outside 
-    of specified posterior predictive intervals. 
+Description: A Bayesian generalised linear model (BGLM) is used to flag individuals with 
+    intra-individual variation in their metabolite levels using repeated measurements. 
+    The model can include covariates such as sex or age. Individuals are flagged when 
+    their metabolite levels lie outside specified posterior predictive interval ranges. 
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -19,21 +16,20 @@ Imports:
     circlize,
     coda,
     ComplexHeatmap,
-    data.table,
     doParallel,
     dplyr,
     foreach,
     ggplot2,
     grid,
-    magrittr,
     MCMCglmm,
     parallel,
     plotly,
     reshape2,
     stringr,
-    tidyr
+    tidyr,
+    scales
 Depends: 
-    R (>= 2.10)
+    R (>= 3.5.0)
 Suggests: 
     knitr,
     rmarkdown

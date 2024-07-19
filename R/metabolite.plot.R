@@ -1,20 +1,22 @@
 `%>%` <- magrittr::`%>%`
 #' @title
-#' Plots the distribution of metabolite levels.
+#' Plot the distribution of metabolite levels.
 #' @description
-#' A function that plots (as a violin plot) the distributions of metabolites for all individuals across all time points.
+#' A function that produces violin plots of the distributions of metabolites for all individuals across all time points.
 #'
-#' @param data A data frame containing data on all individuals
+#' @param data A data frame containing data of all variables to be used in the BGLM. Refer to \code{\link{metabol.data}} for the structure of the data.
 #' @param metabolite A string or a list of strings containing the names of the metabolites to be plotted.
 #' @param main The text for the main title.
 #'
-#' @return A violin plot for the specified metabolites.
 #' @export
 #'
 #' @examples
+#' # Load the simulated data and extract the metabolites names.
 #' data(metabol.data)
 #' metabolite_list = colnames(metabol.data)[5:length(colnames(metabol.data))]
 #' metabolites = get.metabolites(list = metabolite_list)
+#'
+#' # Plots the distribution of single metabolite or multiple metabolites.
 #' metabolite.plot(data = metabol.data,metabolite = metabolites[1])
 #' metabolite.plot(data = metabol.data,metabolite = metabolites[1:3])
 #'
