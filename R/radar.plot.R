@@ -3,25 +3,32 @@
 globalVariables(c("metabolite","flag","original","timepoint","lower","upper","value","x"))
 
 
-#' @title Plot a radarplot showing metabolic profile of an individual across all timepoints.
+#' @title Radar plot for an individual.
+#' @description
+#' Visualise a radar plot showing the metabolic profile of an individual across all time points and for all metabolites.
 #'
 #' @param model An object of class \code{\link{MetaboVariation}} containing the fitted model results.
-#' @param interval The interval for the Highest Posterior Distribution (HPD) that you want to visualize.
-#' @param individual ID for individual you want to visualize
+#' @param interval The interval for the Highest Posterior Distribution (HPD) that you want to visualise.
+#' @param individual The ID for individual you want to visualise.
 #' @param title Title to plot
 #'
-#' @return Returns a radarplot for an specific individual at specified interval
+#' @return Returns a radar plot for a specific individual at the specified interval.
 #' @export
 #'
 #' @examples
 #' \dontrun{
+#' # Load the simulated data and extract the metabolites names.
 #' data(metabol.data)
 #' metabolite_list = colnames(metabol.data)[5:length(colnames(metabol.data))]
 #' metabolites = get.metabolites(list = metabolite_list)
 #' covariates = c("SexM.1F.2","Age","BMI")
 #' individual_id = "Individual_id"
+#'
+#' # Run the MetaboVariation.
 #' model = MetaboVariation(data = metabol.data,individual_ids = individual_id,
 #' metabolite = metabolites[1:3], covariates = covariates,cutoff=c(0.95,0.975,0.99))
+#'
+#' # Visualise the radar plot.
 #' radarplor(model,interval=0.975,individual = 3)
 #'}
 
@@ -29,11 +36,11 @@ radar.plot <- function(model,interval,individual,title=""){
   if(!inherits(model,"MetaboVariation")){
     stop("Model passed is not of class 'Metabovariation'")
   }
-  if(model$type!="dependent"){
-    stop("Function is only used with dependent model")
-  }
+  # if(model$type!="dependent"){
+  #   stop("Function is only used with dependent model")
+  # }
   test=model$result
-  plot_df = test[rownames(test) %like% individual,]
+  plot_df = test[rownames(test) %like% paste0("^",individual," "),]
   plot_df = plot_df[,c(paste0(c("lwr","upr"),interval),"original",paste0("flag",interval))]
   plot_df = data.frame(plot_df)
   colnames(plot_df) = c("lower","upper","value","flag")

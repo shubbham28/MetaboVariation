@@ -1,33 +1,33 @@
-#'  Metabolite data of individuals
+#'  Simulated metabolite dataset.
 #'
-#' A simulated dataset containing metabolite levels of 5 metabolites for 150 individuals measured at four different time points. The covariates sex, age and BMI are also available for these individuals.
+#' A simulated dataset containing metabolite levels of 5 metabolites for 150 individuals measured at four different time points. The covariates sex, age, and BMI are also available for these individuals.
 #'
-#' @format A data frame with 150 rows and 16 columns. Missing values for an individual at a time point is showed as NA.
-#' \describe{
-#'   \item{Individual_id}{The id of the individuals.}
-#'   \item{SexM.1F.2}{The gender of the individuals. It is a factor where 1 denotes "Male" while 2 denotes "Female".}
-#'   \item{Age}{The age of the individuals.}
-#'   \item{BMI}{The BMI of the individuals.}
-#'   \item{metA_1}{The value of metabolite "A" for the first timepoint.}
-#'   \item{metB_1}{The value of metabolite "B" for the first timepoint.}
-#'   \item{metC_1}{The value of metabolite "C" for the first timepoint.}
-#'   \item{metD_1}{The value of metabolite "D" for the first timepoint.}
-#'   \item{metE_1}{The value of metabolite "E" for the first timepoint.}
-#'   \item{metA_2}{The value of metabolite "A" for the second timepoint.}
-#'   \item{metB_2}{The value of metabolite "B" for the second timepoint.}
-#'   \item{metC_2}{The value of metabolite "C" for the second timepoint.}
-#'   \item{metD_2}{The value of metabolite "D" for the second timepoint.}
-#'   \item{metE_2}{The value of metabolite "E" for the second timepoint.}
-#'   \item{metA_3}{The value of metabolite "A" for the third timepoint.}
-#'   \item{metB_3}{The value of metabolite "B" for the third timepoint.}
-#'   \item{metC_3}{The value of metabolite "C" for the third timepoint.}
-#'   \item{metD_3}{The value of metabolite "D" for the third timepoint.}
-#'   \item{metE_3}{The value of metabolite "E" for the third timepoint.}
-#'   \item{metA_4}{The value of metabolite "A" for the fourth timepoint.}
-#'   \item{metB_4}{The value of metabolite "B" for the fourth timepoint.}
-#'   \item{metC_4}{The value of metabolite "C" for the fourth timepoint.}
-#'   \item{metD_4}{The value of metabolite "D" for the fourth timepoint.}
-#'   \item{metE_4}{The value of metabolite "E" for the fourth timepoint.}
+#' @format A data frame with 150 rows and 16 columns. Missing values for an individual at a time point are shown as NA.
+#' \itemize{
+#'   \item{Individual_id: The id of the individuals.}
+#'   \item{SexM.1F.2: The gender of the individuals. It is a factor where 1 denotes "Male" while 2 denotes "Female".}
+#'   \item{Age: The age of the individuals.}
+#'   \item{BMI: The BMI of the individuals.}
+#'   \item{metA_1: The value of metabolite "A" for the first timepoint.}
+#'   \item{metB_1: The value of metabolite "B" for the first timepoint.}
+#'   \item{metC_1: The value of metabolite "C" for the first timepoint.}
+#'   \item{metD_1: The value of metabolite "D" for the first timepoint.}
+#'   \item{metE_1: The value of metabolite "E" for the first timepoint.}
+#'   \item{metA_2: The value of metabolite "A" for the second timepoint.}
+#'   \item{metB_2: The value of metabolite "B" for the second timepoint.}
+#'   \item{metC_2: The value of metabolite "C" for the second timepoint.}
+#'   \item{metD_2: The value of metabolite "D" for the second timepoint.}
+#'   \item{metE_2: The value of metabolite "E" for the second timepoint.}
+#'   \item{metA_3: The value of metabolite "A" for the third timepoint.}
+#'   \item{metB_3: The value of metabolite "B" for the third timepoint.}
+#'   \item{metC_3: The value of metabolite "C" for the third timepoint.}
+#'   \item{metD_3: The value of metabolite "D" for the third timepoint.}
+#'   \item{metE_3: The value of metabolite "E" for the third timepoint.}
+#'   \item{metA_4: The value of metabolite "A" for the fourth timepoint.}
+#'   \item{metB_4: The value of metabolite "B" for the fourth timepoint.}
+#'   \item{metC_4: The value of metabolite "C" for the fourth timepoint.}
+#'   \item{metD_4: The value of metabolite "D" for the fourth timepoint.}
+#'   \item{metE_4: The value of metabolite "E" for the fourth timepoint.}
 #' }
 #' @usage data(metabol.data)
 #'

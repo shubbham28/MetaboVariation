@@ -2,27 +2,27 @@
 % Please edit documentation in R/metabolite.plot.R
 \name{metabolite.plot}
 \alias{metabolite.plot}
-\title{Plots the distribution of metabolite levels.}
+\title{Plot the distribution of metabolite levels.}
 \usage{
 metabolite.plot(data, metabolite, main = "")
 }
 \arguments{
-\item{data}{A data frame containing data on all individuals}
+\item{data}{A data frame containing data of all variables to be used in the BGLM. Refer to \code{\link{metabol.data}} for the structure of the data.}
 
 \item{metabolite}{A string or a list of strings containing the names of the metabolites to be plotted.}
 
 \item{main}{The text for the main title.}
 }
-\value{
-A violin plot for the specified metabolites.
-}
 \description{
-A function that plots (as a violin plot) the distributions of metabolites for all individuals across all time points.
+A function that produces violin plots of the distributions of metabolites for all individuals across all time points.
 }
 \examples{
+# Load the simulated data and extract the metabolites names.
 data(metabol.data)
 metabolite_list = colnames(metabol.data)[5:length(colnames(metabol.data))]
 metabolites = get.metabolites(list = metabolite_list)
+
+# Plots the distribution of single metabolite or multiple metabolites.
 metabolite.plot(data = metabol.data,metabolite = metabolites[1])
 metabolite.plot(data = metabol.data,metabolite = metabolites[1:3])
 

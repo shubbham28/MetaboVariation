@@ -2,34 +2,36 @@
 % Please edit documentation in R/circos.plot.R
 \name{circos.plot}
 \alias{circos.plot}
-\title{Plot a circos plot showing the posterior predictive Highest Posterior Distribution (HPD) interval for all the individuals across timepoints for a specific metabolite}
+\title{Plots the MetaboVariation class object for a specific metabolite.}
 \usage{
 circos.plot(model, metabolite, interval, title = "")
 }
 \arguments{
 \item{model}{An object of class \code{\link{MetaboVariation}} containing the fitted model results.}
 
-\item{metabolite}{Specific metabolite you want to visualize}
+\item{metabolite}{Specific metabolite you want to visualise.}
 
-\item{interval}{The interval for the Highest Posterior Distribution (HPD) that you want to visualize.}
+\item{interval}{The interval for the highest posterior distribution (HPD) that you want to visualise.}
 
-\item{title}{Title to plot}
-}
-\value{
-Returns a circos plot for an specific metabolite at specified interval
+\item{title}{Title for the plot.}
 }
 \description{
-Plot a circos plot showing the posterior predictive Highest Posterior Distribution (HPD) interval for all the individuals across timepoints for a specific metabolite
+Visualise a circos plot showing the posterior predictive highest posterior distribution (HPD) interval for all individuals across all time points for a specific metabolite at a specified interval.
 }
 \examples{
 \dontrun{
+# Load the simulated data and extract the metabolites names.
 data(metabol.data)
 metabolite_list = colnames(metabol.data)[5:length(colnames(metabol.data))]
 metabolites = get.metabolites(list = metabolite_list)
 covariates = c("SexM.1F.2","Age","BMI")
 individual_id = "Individual_id"
+
+# Run the MetaboVariation.
 model = MetaboVariation(data = metabol.data,individual_ids = individual_id,
 metabolite = metabolites[1:3], covariates = covariates,cutoff=c(0.95,0.975,0.99))
+
+# Plots the results.
 circos.plot(model,metabolite = metabolites[1],interval=0.975)
 }
 }

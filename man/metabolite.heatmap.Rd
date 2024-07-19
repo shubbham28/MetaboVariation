@@ -2,35 +2,37 @@
 % Please edit documentation in R/metabolite.heatmap.R
 \name{metabolite.heatmap}
 \alias{metabolite.heatmap}
-\title{Plots a heatmap that shows individuals flagged in metabolites across timepoints.}
+\title{Heatmap of individuals flagged across metabolites.}
 \usage{
-metabolite.heatmap(model, interval = NULL, cutoff = NULL, threshold = 1)
+metabolite.heatmap(model, interval = NULL, threshold = 1)
 }
 \arguments{
 \item{model}{An object of class \code{\link{MetaboVariation}} containing the fitted model results.}
 
-\item{interval}{The interval for the Highest Posterior Distribution (HPD) that you want to visualize.}
+\item{interval}{The interval for the highest posterior distribution (HPD) that you want to visualise.}
 
-\item{cutoff}{The cutoff for the heatmap, based on timepoints. This parameter determines the threshold for including individuals based on the percentage of timepoints they are flagged in.
-It ranges from 0 to 100.}
-
-\item{threshold}{A positive integer indicating the minimum number of metabolites an individual must be flagged across different metabolites to be included in the heatmap.}
+\item{threshold}{A positive integer indicating the minimum number of metabolites an individual must be flagged across to be included in the heatmap.}
 }
 \value{
-Returns a heatmap that illustrates the individuals flagged in the metabolites across timepoints..
+Returns a heatmap that illustrates the number of individuals flagged in all the metabolites across time points.
 }
 \description{
-Plots a heatmap that shows individuals flagged in metabolites across timepoints.
+Visualise a heatmap that shows individuals flagged in metabolite across time points.
 }
 \examples{
 \dontrun{
+# Load the simulated data and extract the metabolites names.
 data(metabol.data)
 metabolite_list = colnames(metabol.data)[5:length(colnames(metabol.data))]
 metabolites = get.metabolites(list = metabolite_list)
 covariates = c("SexM.1F.2","Age","BMI")
 individual_id = "Individual_id"
+
+# Run the MetaboVariation.
 model = MetaboVariation(data = metabol.data,individual_ids = individual_id,
 metabolite = metabolites[1:3], covariates = covariates,cutoff=c(0.95,0.975,0.99))
-heatmap(model,interval = 0.975,cutoff=50)
+
+# Visualise the heatmap.
+metabolite.heatmap(model,interval = 0.975,threshold=50)
 }
 }
