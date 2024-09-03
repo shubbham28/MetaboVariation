@@ -1,13 +1,13 @@
 Package: MetaboVariation
-Title: Explore Individual Variation in Metabolite Levels using Repeated Measurements and Bayesian Generalised Linear Models
+Title: Explore individual variation in metabolite levels using repeated measurements and multivariate Bayesian generalised linear models
 Version: 1.0
 Authors@R: c(person("Shubbham", "Gupta",email = "shubbham.gupta@ucdconnect.ie", role = c("aut", "cre")),
     person("Lorraine", "Brennan",email = "lorraine.brennan@ucd.ie", role = c("aut")),
     person("Isobel Claire", "Gormley",email = "claire.gormley@ucd.ie", role = c("aut")))
-Description: A Bayesian generalised linear model (BGLM) is used to flag individuals with 
-    intra-individual variation in their metabolite levels using repeated measurements. 
+Description: A multivariate Bayesian generalised linear model (BGLM) is used to flag individuals with 
+    intra-individual variation in their metabolite levels across repeated measurements. 
     The model can include covariates such as sex or age. Individuals are flagged when 
-    their metabolite levels lie outside specified posterior predictive interval ranges. 
+    their metabolite levels lie outside individual-specific posterior predictive intervals. 
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

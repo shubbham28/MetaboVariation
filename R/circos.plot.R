@@ -3,14 +3,14 @@
 globalVariables(c("metabolite","flag","original","timepoint","lower","upper","value","flag"))
 unit = grid::unit
 
-#' @title Plots the MetaboVariation class object for a specific metabolite.
+#' @title Plots the metabolite-specific circos plot.
 #' @description
-#' Visualise a circos plot showing the posterior predictive highest posterior distribution (HPD) interval for all individuals across all time points for a specific metabolite at a specified interval.
+#' Visualise a circos plot showing a highest posterior density (HPD) interval for posterior predictive distributions for all individuals across all time points for a specific metabolite.
 #'
 #' @param model An object of class \code{\link{MetaboVariation}} containing the fitted model results.
-#' @param metabolite Specific metabolite you want to visualise.
-#' @param interval The interval for the highest posterior distribution (HPD) that you want to visualise.
-#' @param title Title for the plot.
+#' @param metabolite A string containing the name of the metabolite you want to visualise.
+#' @param interval.width The width of the highest posterior density (HPD) interval considered. Must be a numeric between 0 and 1 with default value of 0.95.
+#' @param title Text for the title of the plot.
 #'
 #' @export
 #'
@@ -23,21 +23,21 @@ unit = grid::unit
 #' covariates = c("SexM.1F.2","Age","BMI")
 #' individual_id = "Individual_id"
 #'
-#' # Run the MetaboVariation.
+#' # Run MetaboVariation on first three metabolites.
 #' model = MetaboVariation(data = metabol.data,individual_ids = individual_id,
-#' metabolite = metabolites[1:3], covariates = covariates,cutoff=c(0.95,0.975,0.99))
+#' metabolite = metabolites[1:3], covariates = covariates,interval.width=c(0.95,0.975,0.99))
 #'
-#' # Plots the results.
-#' circos.plot(model,metabolite = metabolites[1],interval=0.975)
+#' # Plots a circos plot for first metabolite with an interval width of 0.975.
+#' circos.plot(model,metabolite = metabolites[1],interval.width=0.975)
 #'}
 
-circos.plot <- function(model,metabolite,interval,title = ""){
+circos.plot <- function(model,metabolite,interval.width = 0.95,title = ""){
   if(!inherits(model,"MetaboVariation")){
     stop("Model passed is not of class 'Metabovariation'")
   }
   colors = grDevices::topo.colors(50)[seq(1, 50, 5)]
 
-    data = cbind.data.frame(stringr::str_split_fixed(rownames(model$result),pattern=" ",n=3),model$result[,colnames(model$result)[colnames(model$result) %like% interval]])
+    data = cbind.data.frame(stringr::str_split_fixed(rownames(model$result),pattern=" ",n=3),model$result[,colnames(model$result)[colnames(model$result) %like% interval.width]])
     colnames(data) = c("id","timepoint","metabolite","lower","upper","flag")
     data = data[data$metabolite %like% metabolite,]
     values = cbind.data.frame(data$id,data$timepoint,data$upper - data$lower)

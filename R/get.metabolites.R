@@ -1,5 +1,5 @@
 #' @title
-#' Extract the names of metabolites present in the data
+#' Extract the names of metabolites present in the data.
 #' @description
 #' Identify the unique metabolites present in the data. When metabolites are measured at different time points, the function returns a list of unique metabolites.
 #'

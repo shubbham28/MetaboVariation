@@ -3,12 +3,12 @@
 \docType{data}
 \name{metabol.data}
 \alias{metabol.data}
-\title{Simulated metabolite dataset.}
+\title{A simulated metabolite dataset.}
 \format{
-A data frame with 150 rows and 16 columns. Missing values for an individual at a time point are shown as NA.
+A data frame with 150 rows and 24 columns. Missing values for an individual at a time point are shown as NA.
 \itemize{
 \item{Individual_id: The id of the individuals.}
-\item{SexM.1F.2: The gender of the individuals. It is a factor where 1 denotes "Male" while 2 denotes "Female".}
+\item{SexM.1F.2: The sex of the individuals. A factor where 1 denotes "Male" while 2 denotes "Female".}
 \item{Age: The age of the individuals.}
 \item{BMI: The BMI of the individuals.}
 \item{metA_1: The value of metabolite "A" for the first timepoint.}

@@ -2,15 +2,15 @@
 `%like%` <- data.table::`%like%`
 globalVariables(c("metabolite","flag","original","timepoint","lower","upper","nonzero_count","n","individual","total_count","percentage","value"))
 
-#' @title Heatmap of individuals flagged across metabolites.
+#' @title Heatmap of the number of individuals flagged in metabolites.
 #' @description
-#' Visualise a heatmap that shows individuals flagged in metabolite across time points.
+#' Visualise a heatmap that shows the number of individuals flagged in metabolites across time points.
 #'
 #' @param model An object of class \code{\link{MetaboVariation}} containing the fitted model results.
-#' @param interval The interval for the highest posterior distribution (HPD) that you want to visualise.
-#' @param threshold A positive integer indicating the minimum number of metabolites an individual must be flagged across to be included in the heatmap.
+#' @param interval.width The width of the highest posterior density (HPD) interval considered. Must be a numeric between 0 and 1 with default value of 0.95.
+#' @param threshold A positive integer indicating the minimum number of metabolites an individual must be flagged in, in order to be included in the heatmap. Deafult is 1.
 #'
-#' @return Returns a heatmap that illustrates the number of individuals flagged in all the metabolites across time points.
+#' @return Returns a heatmap that illustrates the number of individuals flagged in metabolites across time points.
 #' @export
 #'
 #' @examples
@@ -23,24 +23,22 @@ globalVariables(c("metabolite","flag","original","timepoint","lower","upper","no
 #' covariates = c("SexM.1F.2","Age","BMI")
 #' individual_id = "Individual_id"
 #'
-#' # Run the MetaboVariation.
+#' # Run MetaboVariation on first three metabolites.
 #' model = MetaboVariation(data = metabol.data,individual_ids = individual_id,
-#' metabolite = metabolites[1:3], covariates = covariates,cutoff=c(0.95,0.975,0.99))
+#' metabolite = metabolites[1:3], covariates = covariates,interval.width=c(0.95,0.975,0.99))
 #'
-#' # Visualise the heatmap.
-#' metabolite.heatmap(model,interval = 0.975,threshold=50)
+#' # Visualise the heatmap for interval 0.975 with threshold 1.
+#' metabolite.heatmap(model,interval.width = 0.975,threshold=1)
 #'}
 
 
-metabolite.heatmap <- function(model,interval = NULL, threshold = 1){
+metabolite.heatmap <- function(model,interval.width = 0.95, threshold = 1){
   if(!inherits(model,"MetaboVariation")){
     stop("Model passed is not of class 'Metabovariation'")
   }
-  if(model$type!="dependent"){
-    stop("Function is only used with dependent model")
-  }
+
   test= model$result
-  subdf = test[,paste0("flag",interval)]
+  subdf = test[,paste0("flag",interval.width)]
   subdf = data.frame(subdf)
   colnames(subdf) = c("flag")
   subdf$individual = gsub("(.*) .* .*","\\1",rownames(subdf))

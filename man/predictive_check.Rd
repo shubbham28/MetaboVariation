@@ -2,41 +2,31 @@
 % Please edit documentation in R/predictive_check.R
 \name{predictive_check}
 \alias{predictive_check}
-\title{Using posterior predictive checks to assess the model fit of 2 MetaboVariation models.}
+\title{Use posterior predictive checks to assess the model fit of a MetaboVariation model.}
 \usage{
-predictive_check(
-  data,
-  model1,
-  model2,
-  timepoints,
-  metabolites,
-  replication = 100,
-  model1_name = "Model 1",
-  model2_name = "Model 2"
-)
+predictive_check(data, model, timepoints, metabolites, replication = 100)
 }
 \arguments{
-\item{data}{A data frame containing data of all variables to be used in the BGLM.}
+\item{data}{A data frame containing all variables to be used in the BGLM.}
 
-\item{model1}{An object of class \code{\link{MetaboVariation}} containing the fitted model results.}
+\item{model}{An object of class \code{\link{MetaboVariation}} containing the fitted model results.}
 
-\item{model2}{Another object of class \code{\link{MetaboVariation}} containing the fitted model results.}
-
-\item{timepoints}{A list of time points present in the data.}
+\item{timepoints}{A vector of integer detailing the time points present in the data. For example. if there are four timepoints present in the data, the user should specify c(1,2,3,4).}
 
 \item{metabolites}{A string or vector of strings containing the names of metabolites to model.}
 
-\item{replication}{number of replicate datasets to generate. Defaults to 100. Should be less than effective sample size, calculated as (number of iterations - number of warmup iterations) / thinning rate.}
-
-\item{model1_name}{Name for Model 1}
-
-\item{model2_name}{Name for Model 2}
+\item{replication}{Number of replicate datasets to generate. Defaults to 100. Should be less than effective sample size, calculated as (number of iterations - number of warmup iterations) / thinning rate as declared in class \code{\link{MetaboVariation}}.}
 }
 \value{
-A box plot comparing the differences between two \code{\link{MetaboVariation}} objects. Replicated datasets are created from both models, generating a correlation matrix between the original dataset and each replicated dataset for both models at each time point. The box plot displays the mean absolute difference for both models.
+The function returns two values.
+\itemize{
+\item plot - A box plot displaying the mean absolute differences between correlation matrices of the original data and the replicate data sets.
+\item mad - A data frame containing mad values for each time point for each replicate data set.
+}
+along with the MAD values for each replicate data set and each timepoint.
 }
 \description{
-This function performs posterior predictive checks to compare the model fit of two MetaboVariation models by generating replicated datasets from both models and computing the mean absolute differences between correlation matrices for the original and replicated datasets at each time point.
+This function performs posterior predictive checks to assess the fit of a MetaboVariation model by generating replicate datasets from the posterior predictive distribution and computing the mean absolute differences between correlation matrices for the original and replicate datasets at each time point.
 }
 \examples{
 \dontrun{
@@ -47,15 +37,15 @@ metabolites = get.metabolites(list = metabolite_list)
 covariates = c("SexM.1F.2","Age","BMI")
 individual_id = "Individual_id"
 
-# Run the MetaboVariation model 1.
-model1 = MetaboVariation(data = metabol.data,individual_ids = individual_id,
+# Run MetaboVariation on first three metabolites.
+model = MetaboVariation(data = metabol.data,individual_ids = individual_id,
 metabolite = metabolites[1:3],type="dependent")
 
-# Run the MetaboVariation model 2.
-model2 = MetaboVariation(data = metabol.data,individual_ids = individual_id,
-metabolite = metabolites[1:3],type="independent")
-
-# Perform predictive check between two models
-predictive_check(metabol.data, model1, model2, c(1,2,3,4), metabolites)
+# Perform posterior predictive check
+check = predictive_check(metabol.data, model, c(1,2,3,4), metabolites)
+# To plot the box plot
+check$plot
+# To see MAD values for the model.
+check$mad
 }
 }

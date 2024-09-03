@@ -4,14 +4,14 @@
 \alias{metabolite.plot}
 \title{Plot the distribution of metabolite levels.}
 \usage{
-metabolite.plot(data, metabolite, main = "")
+metabolite.plot(data, metabolite, title = "")
 }
 \arguments{
-\item{data}{A data frame containing data of all variables to be used in the BGLM. Refer to \code{\link{metabol.data}} for the structure of the data.}
+\item{data}{A data frame containing data of all variables to be used in the BGLM. Refer to \code{\link{metabol.data}} for the required structure and content of the data frame.}
 
 \item{metabolite}{A string or a list of strings containing the names of the metabolites to be plotted.}
 
-\item{main}{The text for the main title.}
+\item{title}{The text for the title of the plot.}
 }
 \description{
 A function that produces violin plots of the distributions of metabolites for all individuals across all time points.
@@ -22,7 +22,7 @@ data(metabol.data)
 metabolite_list = colnames(metabol.data)[5:length(colnames(metabol.data))]
 metabolites = get.metabolites(list = metabolite_list)
 
-# Plots the distribution of single metabolite or multiple metabolites.
+# Plots the distribution of a single metabolite or multiple metabolites.
 metabolite.plot(data = metabol.data,metabolite = metabolites[1])
 metabolite.plot(data = metabol.data,metabolite = metabolites[1:3])
 
