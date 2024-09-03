@@ -18,16 +18,15 @@ knitr::opts_chunk$set(eval = TRUE)
 knitr::opts_chunk$set(fig.width=8, fig.height=6) 
 # knitr::opts_chunk$set(eval = FALSE)
 knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+library(MetaboVariation)
+
 ```
 
 # Introduction
 
+Variations in individuals' metabolic profiles are the result of their genetic makeup, environmental, and lifestyle factors. Hence, we have developed the __MetaboVariation__ package to facilitate the flagging of individuals with intra-individual variation in their metabolite levels using repeated measures data. 
 
-Most metabolomic biomarker research concentrates on disease biomarkers discovered by comparing patients with the illness to matched controls. However, this approach has limited impact on the early detection of disease or metabolic dysfunction biomarkers.\newline
-
-Variability within individuals arises from various factors, leading to differences in metabolic profiles. Hence, we have developed the __MetaboVariation__ package to facilitate the flagging of individuals with intra-individual variation in their metabolite levels using repeated measures data. 
-
-Expanding on our previous work with the univariate __MetaboVariation__ approach [[1][References]], we now employ a multivariate Bayesian generalised linear model (BGLM) that considers dependencies among metabolites. This multivariate approach allows us to flag individuals by considering all metabolites and their inherent dependencies, unlike previous research that focused on a single metabolite. Consequently, individuals whose observed metabolite levels deviate from their individual posterior predictive interval at a specified time point are flagged. The __MetaboVariation__ package is built on the function [MCMCglmm](https://www.rdocumentation.org/packages/MCMCglmm/versions/2.34/topics/MCMCglmm) from the [MCMCglmm](https://cran.r-project.org/web/packages/MCMCglmm/index.html) package [[2][References]], which fits the BGLM.  The approach is flexible, allowing for the consideration of multiple posterior predictive interval widths, allowing a detailed examination of metabolite variations at the individual level.
+Expanding on our previous work with the univariate __MetaboVariation__ approach [[1][References]], we now employ a multivariate Bayesian generalised linear model (BGLM) that considers dependencies among metabolites. This multivariate approach allows us to flag individuals by considering all metabolites and their inherent dependencies, unlike previous research that focused on a single metabolites independently. Consequently, individuals whose observed metabolite levels deviate from their individual posterior predictive interval at a specified time point are flagged. The __MetaboVariation__ package is built on the [MCMCglmm](https://cran.r-project.org/web/packages/MCMCglmm/index.html) package [[2][References]], which fits the multivariate BGLM.  The approach is flexible, allowing for the consideration of multiple posterior predictive interval widths, and a detailed examination of metabolite variations at the individual level.
 
 
 This document gives an overview of __MetaboVariation__ functionalities. See `help` `(package = MetaboVariation)` for further details and references available via `citation("MetaboVariation")`.
@@ -41,16 +40,17 @@ To use the __MetaboVariation__ package, the user should have the R software envi
 
 *  circlize, coda, ComplexHeatmap, doParallel, dplyr, foreach, ggplot2, grid, MCMCglmm, parallel, plotly, reshape2, stringr, tidyr, scales.
 
-Assuming that the user has the __MetaboVariation__ package installed, the user first needs to load the package:
-```{r setup}
+To install and load the __MetaboVariation__ package:
+```{r setup,eval=FALSE}
+install.packages("MetaboVariation")
 library(MetaboVariation)
 ```
 
 ## A simulated data example
 
-The object `metabol.data` is a simulated dataset that contains metabolite levels of 5 metabolites for 150 individuals measured at four different time points. The covariates sex, age and BMI are also available for these individuals. 
+The object `metabol.data` is a simulated dataset that contains metabolite levels of 5 metabolites for 150 individuals measured at four time points. The covariates sex, age and BMI are also available for these individuals. 
 
-To load the data and examine its column type:
+To load the data and examine its column names type:
 ```{r data}
 data(metabol.data)
 colnames(metabol.data)
@@ -60,7 +60,7 @@ The subject IDs of individuals are stored in the column named `Individual_id`, w
 
 ## Extracting metabolite names
 
-To extract the names of metabolites that are present in the data, the function `get.metabolites` reads the names of columns that contain metabolite values and provides a list of unique metabolites. The user should not pass any unnecessary column names (e.g., any column names that relate to covariate or subject ID information) to the function. The function will return a vector containing the names of unique metabolites. To do this type:
+To extract the names of metabolites that are present in the data, the function `get.metabolites` reads the names of columns that contain metabolite values and provides a list of unique metabolites. The user should not pass any unnecessary column names (e.g., any column names that relate to covariate or individual ID information) to the function. The function will return a vector containing the names of unique metabolites. To do this type:
 
 ```{r get.metabolites}
 metabolite_list = colnames(metabol.data)[5:length(colnames(metabol.data))]
@@ -73,62 +73,62 @@ metabolites
 The user can plot the distributions of metabolites for each time point using the function `metabolite.plot`. The user can pass either a single metabolite or multiple metabolites to this function. For example, to view the distribution of the metaboliteA metabolite type:
 
 ```{r metabolite.plot1}
-metabolite.plot(data = metabol.data,metabolite = metabolites[1],main="Distribution of metaboliteA")
+metabolite.plot(data = metabol.data,metabolite = metabolites[1],
+                title="Distribution of metaboliteA")
 ```
 
 
-## Modelling the data to flag individuals with intra-individual variations in metabolite levels
+## Modelling the data to flag individuals with intra-individual variation in metabolite levels
 
 Specifications of the priors used in the BGLM requires consideration. 
 The __MetaboVariation__ package allows you to specify your own prior parameters based on specific settings, or alternatively, default settings are available.
 
-### Prior Specification
+### Prior specification
 
 You can specify your own prior parameters using the following structure, or let the package calculate them automatically based on fitting an independent BGLM to the metabolite data.
 
-```{r,eval=FALSE}
-# Initialise the prior mean vector with zeros, one for each metabolite
+```{r prior,eval=FALSE}
+# Set the prior mean vector with zeros, one for each metabolite
 prior_mean <- rep(0, length(metabolites))
-# Initialise the prior standard deviation vector with ones, one for each metabolite
-prior_sd <- rep(1, length(metabolites))
-# Initialise the prior residual covariance matrix as an identity matrix
+# Set the prior variance vector with ones, one for each metabolite
+prior_V <- rep(1, length(metabolites))
+# Set the prior residual covariance matrix as an identity matrix
 prior_R <- diag(1,length(metabolites))
-# Initialise the prior random effects covariance matrix as an identity matrix
+# Set the prior random effects covariance matrix as an identity matrix
 prior_G <- diag(1,length(metabolites))
 
 # Combine all the priors into a list
 prior <- list(
-  B = list(mu = prior_mean, V = diag(prior_sd^2)),
+  B = list(mu = prior_mean, V = diag(prior_V)),
   R = list(V = prior_R, nu = length(metabolites) * 1.5),
   G = list(G1 = list(V = prior_G, nu = length(metabolites) * 1.5))
 )
 ```
 
-* B: This is the prior for the regression coefficients, assumed to follow a multivariate normal distribution with prior mean of zero and prior covariance matrix set to a diagonal matrix where the diagonal elements are the variances of the coefficients. 
+* B: This is the prior for the regression coefficients, assumed to follow a multivariate normal distribution with prior mean of zero and prior covariance matrix set to a diagonal matrix where the diagonal elements are the variances of the regression coefficients. 
 
 * R and G: These are assumed to follow inverse Wishart prior distributions. The scale matrix V for both R and G is set to an identity matrix. The degrees of freedom (nu) are set to 150% of the number of metabolites (M) to balance between overfitting and capturing metabolite dependencies effectively. 
 
 If nu is too close to the number of metabolites, the resulting prior distribution would be very wide, indicating high uncertainty and potentially underfitting the data. Conversely, if nu is too large, the distribution would be tightly concentrated around the scale matrix, potentially leading to overfitting by not allowing enough flexibility to capture the true variability in the data.
 
-Under default settings, the pacakge calculate the priors for B based on fitting an independent BGLM to the metabolite data. As for R and G, the scale matrixis a dense matrix with diagonal terms as the variance of metabolites calculated by fitting an independent BGLM to the metabolite data and non-zero off-diagonal terms. The off-diagonal values are set to 0.1 the signs of these off-diagonal terms match the signs from the correlation matrix of the metabolite data
+Under default settings, the package calculates the priors for B based on fitting an independent BGLM to the metabolite data. As for R and G, the scale matrix is a dense matrix with diagonal terms as the variance of metabolites calculated by fitting an independent BGLM to the metabolite data and non-zero off-diagonal terms. The off-diagonal values are set to 0.1. The signs of these off-diagonal terms match the signs from the correlation matrix of the metabolite data.
 
-### Modelling the Data
+### Modelling the data
 
 
-The main function, `MetaboVariation`, performs the modeling. This function uses BGLM to flag individuals with intra-individual variations in their metabolite levels using repeated measurements. The function requires the data, the names of covariate columns (if any), and the subject ID column and list of metabolites as arguments. 
-
-To find the individuals with intra-individual variation, the BGLM provides the posterior predictive distribution for every individual at each time point, for each metabolite. The `MetaboVariation` function checks if the observed value of the metabolite for an individual is outside the posterior predictive highest posterior distribution (HPD) interval, and if so, the individual is flagged. The width of the HPD interval is set by the `cutoff` argument where the default is a vector containing three values `c(0.95,0.975,0.99)` representing 95%, 97.5% and 99% respectively. The function returns summarised results that contains the upper and lower limit of HPD interval and whether the individual is flagged or not for each cutoff value. 
+The main function, `MetaboVariation`, performs the modeling. The function requires the data, the names of covariate columns (if any), the individual ID column and list of metabolites as arguments. 
+To find the individuals with intra-individual variation, the BGLM provides the posterior predictive distribution for every individual at each time point, for each metabolite. These are used to identify individuals with observed metabolite levels outside the `interval.width`% highest posterior density (HPD) interval at one time point; such individuals with notable variation are flagged. The width of the HPD interval is set by the `interval.width` argument where the default is a vector containing three values `c(0.95,0.975,0.99)`. The function returns summarised results that contains the upper and lower limit of the HPD intervals and whether the individual is flagged or not under each HPD interval width. 
 
 #### Multivariate dependent model
 
-By setting `type="dependent"`, the `MetaboVariation` models the data using multivariate model that takes dependencies between metabolites into account is fitted.
+By setting `type="dependent"`, `MetaboVariation` models the data using a multivariate model that takes dependencies between metabolites into account.
 
-To fit the model,type:
+To fit the model, type:
 
 ```{r MetaboVariation1,results="hide",eval=FALSE}
 model = MetaboVariation(data = metabol.data, individual_ids = "Individual_id",
           metabolite = metabolites,covariates = c("SexM.1F.2","Age","BMI"),
-          cutoff=c(0.95,0.975,0.99),type="dependent")
+          interval.width =c(0.95,0.975,0.99),type="dependent")
 
 ```
 ```{r,echo=FALSE}
@@ -140,18 +140,23 @@ load(system.file("extdata", "model.Rdata", package = "MetaboVariation"))
 names(model)
 ```
 
+```{r,echo=FALSE}
+save(list = c("model","independent_model","plotdf"),file = "~/Data/UCD/Ph.D/Main Research/R codes/MetaboVariation/inst/extdata/model.Rdata")
+model$model = c("")
+independent_model$model = c("")
+```
 
 The function returns  a list that contains the following values:
 
-*  model - contains BGLM model outputs.
-*  type - shows which model is has been fitted.. It can be either "dependent" or "independent".
-*  significant_covariates - a data frame containing the estimates and 95% confidence intervals for each covariate across all metabolites along with a binary flag indicating whether each covariate is significant for the corresponding metabolite.
-*  result - a data frame containing the posterior predictive distributions of the cohort. The result contains the mean, `cutoff` % credible interval width, tails of the credible interval and the observed value of the metabolite for the individual for that time point. The result also has a binary flag that shows whether the observed value lies within the HPD interval or not where 1 denotes the observed value lies in the interval and 0 denotes the observed value lies outside the interval.
+*  result - a data frame containing the summary of the HPDs of the posterior predictive distributions of the individuals in the cohort and a binary flag for each HPD showing whether the individual is flagged under each HPD interval width or not. The data frame contains following columns: the mean, the lower and upper bounds of each HPD interval, the observed value of the metabolite for the individual for that timepoint and the binary flag for each HPD interval. The binary flag indicates whether the observed value lies within the HPD interval or not where 1 denotes the observed value lies outside the interval and 0 denotes the observed value lies in the interval. The row names specify the individual, time point, and metabolite for each observation.
+*  significant_covariates - a data frame containing the estimates and 95% credible intervals for each regression coefficient for each covariate across all metabolites along with a binary flag indicating whether each covariate is significant in the model for the corresponding metabolite.
 *  chain_convergence - the potential scale reduction statistic, also known as the Gelman-Rubin statistic which measures the extent to which chains are converging [[3][References]]. The further the value of the statistic from 1, the poorer the convergence of the chains. The MCMC chains are considered converged if the value lies between 0.9 and 1.05.
+*  model - contains BGLM model outputs.
+*  type - shows which model is fitted. It can be either "dependent" or "independent".
 
 See `?MetaboVariation` for further details about the function.
 
-The following code displays the first five observations flagged within the 95% HPD intervals. The row names indicate the individual, the time point, and the metabolite for which they have been flagged. The model includes three `cutoffs` (0.95, 0.975, 0.99), providing the lower and upper bounds for each of these HPD intervals. Additionally, there is a flag column that indicates whether the individual is flagged within each HPD interval.
+The following code displays the first five observations flagged within the 95% HPD intervals. The row names indicate the individual, the time point, and the metabolite for which they have been flagged. The output includes three HPD interval widths (0.95, 0.975, 0.99), providing the lower and upper bounds for each of these HPD intervals. Additionally, there is a flag column that indicates whether the individual is flagged within each HPD interval.
 
 ```{r result}
 head(model$result[model$result[,"flag0.95"]==1,])
@@ -159,34 +164,66 @@ head(model$result[model$result[,"flag0.95"]==1,])
 
 #### Independent model
 
-Another way of fitting the model is independently. By setting `type="independent"`, it tells `MetaboVariation` to treat each metabolite independently.
+Another way of fitting the model is independently. By setting `type="independent"`, `MetaboVariation` treats each metabolite independently.
 
 To fit the model, type:
 ```{r MetabVariation3,eval=FALSE}
 independent_model = MetaboVariation(data = metabol.data, individual_ids = "Individual_id",
           metabolite = metabolites,covariates = c("SexM.1F.2","Age","BMI"),
-          cutoff=c(0.95,0.975,0.99),type="independent")
+          interval.width=c(0.95,0.975,0.99),type="independent")
 ```
 
 
 ## Posterior predictive checking
 
-Now that we have two different models—one that considers dependencies between metabolites and one that treats metabolites independently—it is advisable to perform a posterior predictive check to determine which model better fit the data. 
-The function `predictive_check` performs a posterior predictive check for the two models. It generates 100 replicate datasets from the posterior predictive distributions under both models. The function then provides a box plot that shows the mean absolute difference (MAD) between correlation matrices of the original dataset and those obtained from the replicate datasets using model 1 (red) and model 2 (blue), over each time points.
+Now that we have two different models—one that considers dependencies between metabolites and one that treats metabolites independently—it is advisable to perform a posterior predictive check to determine which model better fits the data. 
+The function `predictive_check` performs a posterior predictive check assess the fit of the model. The function generates 100 replicate datasets by default from the posterior predictive distributions. The function then provides a box plot that shows the mean absolute difference (MAD) between correlation matrices of the original dataset and those obtained from the replicated datasets over each time point. The function additionally returns the actual values of MAD for each replicate data set at each timepoint. The following code performs the posterior predictive check for both multivariate model and independent model.
 
+```{r,eval=FALSE}
+multivariate_check = predictive_check(data = metabol.data, model = model, 
+          timepoints = c(1,2,3,4), metabolites = metabolites, replication = 100)
 
-```{r check,eval=FALSE}
-predictive_check(data = metabol.data, model1 = model,model2 = independent_model,
-          timepoints = c(1,2,3,4),metabolites = metabolites, replication = 500, 
-          model1_name = "Multivariate", model2_name = "Independent")
+independent_check = predictive_check(data = metabol.data, model = independent_model, 
+          timepoints = c(1,2,3,4), metabolites = metabolites, replication = 100)
+```
+
+The following code shows the boxplot of  posterior predictive check of multivariate model.
+```{r,eval=FALSE}
+multivariate_check$plot
 ```
 
 ```{r,echo=FALSE}
-ggplot2::ggplot(plotdf,ggplot2::aes(x=variable,y=value,color = Model))+ggplot2::geom_boxplot() + ggplot2::labs(colour ="Model",x="Timepoint",y="MAD") + ggplot2::theme_classic()
+ggplot2::ggplot(plotdf[plotdf$Model=="Multivariate",],ggplot2::aes(x=Timepoint,y=MAD,color = Timepoint))+ggplot2::geom_boxplot() + ggplot2::labs(x="Timepoint",y="MAD") + ggplot2::theme_classic()+ggplot2::theme(legend.position = "none")
 
 ```
 
-The multivariate model shows lower MAD mean across each time point, suggesting a better fit compared to the independent model. Therefore, we will proceed to examine the results of the multivariate model.
+The following shows the first six rows of MAD values.
+```{r,eval=FALSE}
+head(multivariate_check$mad)
+```
+```{r,echo=FALSE}
+head(plotdf[plotdf$Model=="Multivariate",1:2])
+```
+ 
+The following code compares the model fit between multivariate and independent models by using the MAD values from each model's posterior predictive check.
+```{r check,eval=FALSE}
+# Setting model type for each MAD dataframe
+multivariate_check$mad$Model = "Multivariate"
+independent_check$mad$Model = "Independent"
+
+plotdf = rbind(multivariate_check$mad,independent_check$mad)
+ggplot2::ggplot(plotdf,ggplot2::aes(x=Timepoint,y=MAD,color = Model))+
+  ggplot2::geom_boxplot() + ggplot2::labs(colour ="Model",x="Timepoint",y="MAD")
++ ggplot2::theme_classic()
+
+```
+```{r,echo=FALSE}
+ggplot2::ggplot(plotdf,ggplot2::aes(x=Timepoint,y=MAD,color = Model))+ggplot2::geom_boxplot() + ggplot2::labs(colour ="Model",x="Timepoint",y="MAD") + ggplot2::theme_classic()
+
+```
+
+
+The multivariate model shows lower MAD  at each time point, suggesting a better fit compared to the independent model. Therefore, we will proceed to examine the results of the multivariate model.
 
 ## Plotting the results
 
@@ -194,34 +231,34 @@ After fitting the BGLM, the user can use the following plotting functions to vis
 
 ### Radar plot
 
-The function `radar.plot` visualises the metabolic profile of an individual across all time points. This function requires a __MetaboVariation__ object, a specific `interval` value and the `individual` ID to generate the radar plot.
+The function `radar.plot` visualises the metabolic profile of an individual across all time points and all metabolites. This function requires a __MetaboVariation__ object, a specific `interval.width` width and the `individual` ID to generate the radar plot.
 
 Here's how you can use the `radar.plot` function:
 ```{r plot}
-radar.plot(model,interval = 0.95,individual = 150)
+radar.plot(model,interval.width = 0.95,individual = 150)
 ```
 
-The radar plots display intra-individual variations in metabolite levels across four time points, highlighting significant deviations. Metabolites marked with an asterisk (*) are flagged for intra-individudal variation at each respective time point.
+The radar plots display intra-individual variations in metabolite levels across four time points, highlighting significant variations. Metabolites marked with an asterisk (*) are flagged for intra-individudal variation at each respective time point.
 
 ### Metabolite heatmap
 The `metabolite.heatmap` function visualises the flagged individuals across all metabolites. This helps in identifying patterns or variations in certain metabolites.
-This function needs a __MetaboVariation__ object, along with `interval` and a `threshold` to generate the plot. The argument `threshold` indicates the minimum number of metabolites an individual must be flagged in to be involved in the heatmap.
+This function needs a __MetaboVariation__ object, along with `interval.width` width and a `threshold` argument to generate the plot. The argument `threshold` indicates the minimum number of metabolites an individual must be flagged in to be shown in the heatmap.
 
 ```{r plot1}
-metabolite.heatmap(model = model,interval = 0.975,threshold = 3)
+metabolite.heatmap(model = model,interval.width = 0.975,threshold = 2)
 ```
 
-The plot above shows the individuals that have been flagged in at least three metabolites. The darker blue shows the metabolites where the individual is flagged in two time points out of four. 
+The plot above shows the individuals that have been flagged in at least two metabolites. The darker blue shows the metabolites where the individual is flagged in two time points out of four. 
 
 ### Metabolite-pair heatmap
 
-The `metabolitepair.heatmap` function visualises the number of flagged individuals in the pair of metabolites (in the  corresponding row and column) contributes to flagging the individuals within a single time point.
+The `metpair.heatmap` function visualises the number of flagged individuals in pairs of metabolites (in the  corresponding row and column) that contributeto the flagging of the individuals within a single time point.
 
-This function needs a __MetaboVariation__ object, along with a specific `interval` and `threshold` to generate the plot. The interval refers for the highest posterior distribution (HPD) that you want to visualize and the threshold indicates a positive integer that refers to the minimum number of metabolites an individual must be flagged in a time point to be included in the heatmap.
+This function needs a __MetaboVariation__ object, along with a specific `interval.width` width to generate the plot. The interval refers to the width of the highest posterior density (HPD) that you want to visualise.
 
 To plot the heatmap, type:
 ```{r plot2}
-metabolitepair.heatmap(model = model,interval = 0.95,threshold = 1)
+metpair.heatmap(model = model,interval.width = 0.95)
 ```
 
 
@@ -229,21 +266,21 @@ The heat map illustrates the number of individuals flagged for intra-individual 
 
 ### Circos plot
 
-The `circos.plot` plot shows the posterior predictive HPD interval for all the time points for all individuals for a single metabolite. The outer circle shows the individuals' labels while each inner circle represents a time point. The length of a bar represents the  width of the posterior predictive interval and a black bar indicates that a particular individual has been flagged. 
+The `circos.plot` plot shows the posterior predictive HPD interval for all time points for all individuals for a single metabolite. The outer circle shows the individuals' labels while each inner circle represents a time point. The length of a bar represents the  width of the posterior predictive interval and a black bar indicates that a particular individual has been flagged. 
 
 ```{r plot3}
-circos.plot(model = model,metabolite = metabolites[1],interval = 0.975)
+circos.plot(model = model,metabolite = metabolites[1],interval.width = 0.975)
 ```
 
-The circos plot visualises the posterior predictive HPD intervals for all individuals across four time points for a single metabolite "metA". From the plot, 14 individuals are flagged: 2 at time point 1 (blue), 4 at time point 2 (cyan), 6 at time point 3 (green), and 2 at time point 4 (black).
+The circos plot visualises the 97.5% posterior predictive HPD intervals for all individuals across four time points for a single metabolite "metA". From the plot, 14 individuals are flagged: 2 at time point 1 (blue), 4 at time point 2 (cyan), 6 at time point 3 (green), and 2 at time point 4 (black).
 
 # References
-[1] Gupta S, Gormley IC, Brennan L. MetaboVariation: Exploring Individual Variation in Metabolite Levels. Metabolites. 2023; 13(2):164. https://doi.org/10.3390/metabo13020164 
+[1] Gupta, S., Gormley, I. C., & Brennan, L. (2023). MetaboVariation: Exploring Individual Variation in Metabolite Levels. *Metabolites*, 13(2), 164.
 
 \newline
 
-[2] Hadfield, J. D. (2010). MCMC Methods for Multi-Response Generalized Linear Mixed Models: The MCMCglmm R Package. Journal of Statistical Software, 33(2), 1–22. https://doi.org/10.18637/jss.v033.i02
+[2] Hadfield, J. D. (2010). MCMC Methods for Multi-Response Generalized Linear Mixed Models: The MCMCglmm R Package. *Journal of Statistical Software*, 33(2), 1–22.
 
 \newline
 
-[3] Gelman A, Rubin DB. 1992 Inference from iterative simulation using multiple sequences. Stat. Sci. 7, 457–472. (doi:10.1214/ss/1177011136)
+[3] Gelman, A., & Rubin, D. B. (1992). Inference from Iterative Simulation Using Multiple Sequences. *Statistical Science*, 7(4), 457–472.

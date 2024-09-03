@@ -3,16 +3,16 @@
 globalVariables(c("metabolite","flag","original","timepoint","lower","upper","value","x"))
 
 
-#' @title Radar plot for an individual.
+#' @title Radar plot showing the metabolic profile for an individual.
 #' @description
 #' Visualise a radar plot showing the metabolic profile of an individual across all time points and for all metabolites.
 #'
 #' @param model An object of class \code{\link{MetaboVariation}} containing the fitted model results.
-#' @param interval The interval for the Highest Posterior Distribution (HPD) that you want to visualise.
-#' @param individual The ID for individual you want to visualise.
-#' @param title Title to plot
+#' @param interval.width The width of the highest posterior density (HPD) interval considered. Must be a numeric between 0 and 1 with default value of 0.95.
+#' @param individual The ID of the individual you want to visualise in the form of a string.
+#' @param title Title of plot.
 #'
-#' @return Returns a radar plot for a specific individual at the specified interval.
+#' @return Returns a radar plot for a specific individual at the specified interval across all metabolites and all timepoints.
 #' @export
 #'
 #' @examples
@@ -24,15 +24,15 @@ globalVariables(c("metabolite","flag","original","timepoint","lower","upper","va
 #' covariates = c("SexM.1F.2","Age","BMI")
 #' individual_id = "Individual_id"
 #'
-#' # Run the MetaboVariation.
+#' # Run MetaboVariation on first three metabolites.
 #' model = MetaboVariation(data = metabol.data,individual_ids = individual_id,
-#' metabolite = metabolites[1:3], covariates = covariates,cutoff=c(0.95,0.975,0.99))
+#' metabolite = metabolites[1:3], covariates = covariates,interval.width=c(0.95,0.975,0.99))
 #'
 #' # Visualise the radar plot.
-#' radarplor(model,interval=0.975,individual = 3)
+#' radarplor(model,interval.width=0.975,individual = "3")
 #'}
 
-radar.plot <- function(model,interval,individual,title=""){
+radar.plot <- function(model,interval.width= 0.95,individual = NULL,title=""){
   if(!inherits(model,"MetaboVariation")){
     stop("Model passed is not of class 'Metabovariation'")
   }
@@ -41,7 +41,7 @@ radar.plot <- function(model,interval,individual,title=""){
   # }
   test=model$result
   plot_df = test[rownames(test) %like% paste0("^",individual," "),]
-  plot_df = plot_df[,c(paste0(c("lwr","upr"),interval),"original",paste0("flag",interval))]
+  plot_df = plot_df[,c(paste0(c("lwr","upr"),interval.width),"original",paste0("flag",interval.width))]
   plot_df = data.frame(plot_df)
   colnames(plot_df) = c("lower","upper","value","flag")
   plot_df$timepoint = gsub(".* (.*) .*","\\1",rownames(plot_df))

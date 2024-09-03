@@ -86,7 +86,7 @@ prediction<-function(object,nsim=nrow(object$Sol),newdata=NULL,levels = c(0.91,0
     }
     colnames(pred)<-c("fit",as.vector(outer(c("lwr","upr"),levels,paste0)))
     rownames(pred)<-1:dim(pred)[1]
-    pred[pred < 0 ] = 1
+    pred[pred < 0 ] = 0.0001
     result = list("posterior" = ynew,"summary"=pred)
     return(result)
   }

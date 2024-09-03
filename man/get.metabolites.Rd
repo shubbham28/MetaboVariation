@@ -2,7 +2,7 @@
 % Please edit documentation in R/get.metabolites.R
 \name{get.metabolites}
 \alias{get.metabolites}
-\title{Extract the names of metabolites present in the data}
+\title{Extract the names of metabolites present in the data.}
 \usage{
 get.metabolites(list, divider = "_", start = TRUE)
 }

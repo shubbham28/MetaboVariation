@@ -1,11 +1,11 @@
-#'  Simulated metabolite dataset.
+#'  A simulated metabolite dataset.
 #'
 #' A simulated dataset containing metabolite levels of 5 metabolites for 150 individuals measured at four different time points. The covariates sex, age, and BMI are also available for these individuals.
 #'
-#' @format A data frame with 150 rows and 16 columns. Missing values for an individual at a time point are shown as NA.
+#' @format A data frame with 150 rows and 24 columns. Missing values for an individual at a time point are shown as NA.
 #' \itemize{
 #'   \item{Individual_id: The id of the individuals.}
-#'   \item{SexM.1F.2: The gender of the individuals. It is a factor where 1 denotes "Male" while 2 denotes "Female".}
+#'   \item{SexM.1F.2: The sex of the individuals. A factor where 1 denotes "Male" while 2 denotes "Female".}
 #'   \item{Age: The age of the individuals.}
 #'   \item{BMI: The BMI of the individuals.}
 #'   \item{metA_1: The value of metabolite "A" for the first timepoint.}
