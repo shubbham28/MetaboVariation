@@ -3,7 +3,7 @@
 #' @description
 #' Identify the unique metabolites present in the data. When metabolites are measured at different time points, the function returns a list of unique metabolites.
 #'
-#' @param list A list containing the names of columns that contain metabolite values across time points.
+#' @param list A vector containing the names of columns that contain metabolite values across time points.
 #' @param divider The character used to separate the metabolite name and time point name in the data. The default is "_".
 #' @param start A binary value indicating if the metabolite name is followed by the time point or if the time point is followed by the metabolite.
 #' For example, a column for metaboliteA at time point 1 named such as "MetaboliteA_1" should have start=TRUE, while a column name like "1_MetaboliteA" should have start=FALSE.

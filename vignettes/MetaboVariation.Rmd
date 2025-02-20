@@ -111,7 +111,7 @@ prior <- list(
 
 If nu is too close to the number of metabolites, the resulting prior distribution would be very wide, indicating high uncertainty and potentially underfitting the data. Conversely, if nu is too large, the distribution would be tightly concentrated around the scale matrix, potentially leading to overfitting by not allowing enough flexibility to capture the true variability in the data.
 
-Under default settings, the package calculates the priors for B based on fitting an independent BGLM to the metabolite data. As for R and G, the scale matrix is a dense matrix with diagonal terms as the variance of metabolites calculated by fitting an independent BGLM to the metabolite data and non-zero off-diagonal terms. The off-diagonal values are set to 0.1. The signs of these off-diagonal terms match the signs from the correlation matrix of the metabolite data.
+Under default settings, the package calculates the priors for B based on fitting an independent BGLM to the metabolite data. As for R and G, the scale matrix is a dense matrix with diagonal terms as the variance of metabolites calculated by fitting an independent BGLM to the metabolite data. The off-diagonal values are set to 0.1 with signs of these off-diagonal terms match the signs from the correlation matrix of the metabolite data.
 
 ### Modelling the data
 
@@ -126,7 +126,7 @@ By setting `type="dependent"`, `MetaboVariation` models the data using a multiva
 To fit the model, type:
 
 ```{r MetaboVariation1,results="hide",eval=FALSE}
-model = MetaboVariation(data = metabol.data, individual_ids = "Individual_id",
+model = MetaboVariation(data = metabol.data, individual_ids = "Sample.Id",
           metabolite = metabolites,covariates = c("SexM.1F.2","Age","BMI"),
           interval.width =c(0.95,0.975,0.99),type="dependent")
 
@@ -168,7 +168,7 @@ Another way of fitting the model is independently. By setting `type="independent
 
 To fit the model, type:
 ```{r MetabVariation3,eval=FALSE}
-independent_model = MetaboVariation(data = metabol.data, individual_ids = "Individual_id",
+independent_model = MetaboVariation(data = metabol.data, individual_ids = "Sample.Id",
           metabolite = metabolites,covariates = c("SexM.1F.2","Age","BMI"),
           interval.width=c(0.95,0.975,0.99),type="independent")
 ```
@@ -180,7 +180,7 @@ Now that we have two different models—one that considers dependencies between 
 The function `predictive_check` performs a posterior predictive check assess the fit of the model. The function generates 100 replicate datasets by default from the posterior predictive distributions. The function then provides a box plot that shows the mean absolute difference (MAD) between correlation matrices of the original dataset and those obtained from the replicated datasets over each time point. The function additionally returns the actual values of MAD for each replicate data set at each timepoint. The following code performs the posterior predictive check for both multivariate model and independent model.
 
 ```{r,eval=FALSE}
-multivariate_check = predictive_check(data = metabol.data, model = model, 
+multivariate_check = predictive_check(data = metabol.data, model = dependent_model, 
           timepoints = c(1,2,3,4), metabolites = metabolites, replication = 100)
 
 independent_check = predictive_check(data = metabol.data, model = independent_model, 
@@ -213,8 +213,13 @@ independent_check$mad$Model = "Independent"
 
 plotdf = rbind(multivariate_check$mad,independent_check$mad)
 ggplot2::ggplot(plotdf,ggplot2::aes(x=Timepoint,y=MAD,color = Model))+
-  ggplot2::geom_boxplot() + ggplot2::labs(colour ="Model",x="Timepoint",y="MAD")
-+ ggplot2::theme_classic()
+  ggplot2::geom_boxplot() + ggplot2::labs(colour ="Model",x="Timepoint",y="MAD") + ggplot2::theme_classic() +
+          theme(
+            axis.text = element_text(size = 14),
+            axis.title = element_text(size = 16),
+    legend.text = ggplot2::element_text(size = 14),   # Increase legend text size
+    legend.title = ggplot2::element_text(size = 16)  # Increase legend title size
+    ))
 
 ```
 ```{r,echo=FALSE}
@@ -269,7 +274,7 @@ The heat map illustrates the number of individuals flagged for intra-individual 
 The `circos.plot` plot shows the posterior predictive HPD interval for all time points for all individuals for a single metabolite. The outer circle shows the individuals' labels while each inner circle represents a time point. The length of a bar represents the  width of the posterior predictive interval and a black bar indicates that a particular individual has been flagged. 
 
 ```{r plot3}
-circos.plot(model = model,metabolite = metabolites[1],interval.width = 0.975)
+circos.plot(model = model,metabolite = metabolites[1],interval.width = 0.95)
 ```
 
 The circos plot visualises the 97.5% posterior predictive HPD intervals for all individuals across four time points for a single metabolite "metA". From the plot, 14 individuals are flagged: 2 at time point 1 (blue), 4 at time point 2 (cyan), 6 at time point 3 (green), and 2 at time point 4 (black).

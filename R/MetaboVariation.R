@@ -123,7 +123,13 @@ MetaboVariation <- function ( data,individual_ids,metabolites,covariates=NULL,ty
     final_data = final_data[order(final_data$occurrence),]
     final_data = stats::na.omit(final_data)
     sign_matrix = sign(stats::cor(final_data[,metabolites]))
-    formula = paste("cbind(",paste(metabolites,collapse = ", "),")~ trait - 1 + ",paste("trait:",covariates,collapse = " + "))
+    if(is.null(covariates)){
+      formula = paste("cbind(",paste(metabolites,collapse = ", "),")~ trait - 1 ")
+
+    }else{
+      formula = paste("cbind(",paste(metabolites,collapse = ", "),")~ trait - 1 + ",paste("trait:",covariates,collapse = " + "))
+
+    }
     if(type == "dependent"){
       random = stats::as.formula(paste("~us(trait):",individual_ids))
     }else if(type == "independent"){
@@ -141,13 +147,22 @@ MetaboVariation <- function ( data,individual_ids,metabolites,covariates=NULL,ty
       for (metabolite in metabolites) {
         sub_model <- parallel::mclapply(1:n_chains, function(i) {
           # set.seed(seed + i)
-          MCMCglmm::MCMCglmm(stats::as.formula(paste(metabolite, "~",paste(covariates,collapse = " + "))),random = stats::as.formula(paste("~us(1):",individual_ids)),data = final_data,pr=TRUE,nitt = iter/2,thin = thin,burnin = warmup/2)
+          if(is.null(covariates)){
+            sub_formula = stats::as.formula(paste(metabolite, "~ 1"))
+          }else{
+            sub_formula = stats::as.formula(paste(metabolite, "~",paste(covariates,collapse = " + ")))
+          }
+          MCMCglmm::MCMCglmm(sub_formula,random = stats::as.formula(paste("~us(1):",individual_ids)),data = final_data,pr=TRUE,nitt = iter/2,thin = thin,burnin = warmup/2)
         }, mc.cores=cores)
         model_summary = list()
         model_summary$Sol = c()
         model_summary$VCV = c()
         for (i in 1:length(sub_model)) {
-          model_summary$Sol = rbind(model_summary$Sol,sub_model[[i]]$Sol[,1:(1+length(covariates))])
+          if(is.null(covariates)){
+            model_summary$Sol = c(model_summary$Sol,sub_model[[i]]$Sol[,1])
+          }else{
+            model_summary$Sol = rbind(model_summary$Sol,sub_model[[i]]$Sol[,1:(1+length(covariates))])
+          }
           model_summary$VCV = rbind(model_summary$VCV,sub_model[[i]]$VCV)
         }
         old_model[[metabolite]] = model_summary
@@ -159,14 +174,25 @@ MetaboVariation <- function ( data,individual_ids,metabolites,covariates=NULL,ty
       prior_G = c()
       prior_R = c()
       for (metabolite in metabolites) {
-        sub = apply(old_model[[metabolite]]$Sol,2,mean)
-        sub = sapply(sub,function(x){ifelse(abs(x) > 1, 10 * ifelse(x/10>1,round(x/10),round(x/10,1)), 1)})
-        names(sub) = paste0(metabolite,"_",names(sub))
-        prior_mean = c(prior_mean,sub)
-        sub = apply(old_model[[metabolite]]$Sol,2,stats::sd)
-        sub = sapply(sub,function(x){ifelse(abs(x) > 1, 10 * ifelse(x/10>1,round(x/10),round(x/10,1)), 1)})
-        names(sub) = paste0(metabolite,"_",names(sub))
-        prior_sd = c(prior_sd,sub)
+        if(is.null(covariates)){
+          sub = mean(old_model[[metabolite]]$Sol)
+          sub = sapply(sub,function(x){ifelse(abs(x) > 1, 10 * ifelse(x/10>1,round(x/10),round(x/10,1)), 1)})
+          names(sub) = paste0(metabolite,"_Intercept")
+          prior_mean = c(prior_mean,sub)
+          sub = sd(old_model[[metabolite]]$Sol)
+          sub = sapply(sub,function(x){ifelse(abs(x) > 1, 10 * ifelse(x/10>1,round(x/10),round(x/10,1)), 1)})
+          names(sub) = paste0(metabolite,"_Intercept")
+          prior_sd = c(prior_sd,sub)
+        }else{
+          sub = apply(old_model[[metabolite]]$Sol,2,mean)
+          sub = sapply(sub,function(x){ifelse(abs(x) > 1, 10 * ifelse(x/10>1,round(x/10),round(x/10,1)), 1)})
+          names(sub) = paste0(metabolite,"_",names(sub))
+          prior_mean = c(prior_mean,sub)
+          sub = apply(old_model[[metabolite]]$Sol,2,stats::sd)
+          sub = sapply(sub,function(x){ifelse(abs(x) > 1, 10 * ifelse(x/10>1,round(x/10),round(x/10,1)), 1)})
+          names(sub) = paste0(metabolite,"_",names(sub))
+          prior_sd = c(prior_sd,sub)
+        }
         sub = apply(old_model[[metabolite]]$VCV,2,mean)[[1]]**0.5
         sub = ifelse(abs(sub) > 1, 10 * ifelse(sub/10>1,round(sub/10),round(sub/10,1)), 1)
         names(sub) = metabolite
@@ -176,20 +202,26 @@ MetaboVariation <- function ( data,individual_ids,metabolites,covariates=NULL,ty
         names(sub) = metabolite
         prior_R = c(prior_R,sub)
       }
+      if(is.null(covariates)){
+        prior_mean = prior_mean[order(names(prior_mean))]
 
-      prior_mean = prior_mean[order(
-        !grepl("Intercept", names(prior_mean)),
-        !grepl(covariates[1], names(prior_mean)),# Sort "Intercept" first
-        charmatch(gsub(".+_", "", names(prior_mean)), covariates),
-        match(gsub("_.+", "", names(prior_mean)), metabolites)  # Sort metabolites last
-      )]
+        prior_sd = prior_sd[order(names(prior_mean))]
+      }else{
+        prior_mean = prior_mean[order(
+          !grepl("Intercept", names(prior_mean)),
+          !grepl(covariates[1], names(prior_mean)),# Sort "Intercept" first
+          charmatch(gsub(".+_", "", names(prior_mean)), covariates),
+          match(gsub("_.+", "", names(prior_mean)), metabolites)  # Sort metabolites last
+        )]
 
-      prior_sd = prior_sd[order(
-        !grepl("Intercept", names(prior_sd)),
-        !grepl(covariates[1], names(prior_sd)),# Sort "Intercept" first
-        charmatch(gsub(".+_", "", names(prior_sd)), covariates),
-        match(gsub("_.+", "", names(prior_sd)), metabolites)  # Sort metabolites last
-      )]
+        prior_sd = prior_sd[order(
+          !grepl("Intercept", names(prior_sd)),
+          !grepl(covariates[1], names(prior_sd)),# Sort "Intercept" first
+          charmatch(gsub(".+_", "", names(prior_sd)), covariates),
+          match(gsub("_.+", "", names(prior_sd)), metabolites)  # Sort metabolites last
+        )]
+      }
+
 
       prior_R <- diag(prior_R)
       off_diag_values <- sample(c(0.1), (nrow(prior_R)*(nrow(prior_R)-1))/2, replace = TRUE)
@@ -217,11 +249,12 @@ MetaboVariation <- function ( data,individual_ids,metabolites,covariates=NULL,ty
     summarised <- do.call(coda::mcmc.list, summarised)
     t = summary(summarised)
     rf = coda::gelman.diag(summarised)
-    co_list = cbind(t$statistics[,1:2],t$quantiles[,c(1,5)],apply(t$quantiles, 1, function(x){ifelse(x[1]*x[5] > 0,TRUE,FALSE) }))
-    colnames(co_list) = c("Mean","SD","2.5%","97.5%","Significance")
-    co_list = co_list[-c(1:length(metabolites)),]
-    rownames(co_list) = gsub("trait","",rownames(co_list))
-    rownames(co_list) = gsub(":"," : ",rownames(co_list))
+    if(!is.null(covariates)){
+      co_list = cbind(t$statistics[,1:2],t$quantiles[,c(1,5)],apply(t$quantiles, 1, function(x){ifelse(x[1]*x[5] > 0,TRUE,FALSE) }))
+      colnames(co_list) = c("Mean","SD","2.5%","97.5%","Significance")
+      co_list = co_list[-c(1:length(metabolites)),]
+      rownames(co_list) = gsub("trait","",rownames(co_list))
+      rownames(co_list) = gsub(":"," : ",rownames(co_list))}
     print("Sampling Posterior predicive distribution")
 
     doParallel::registerDoParallel(cores)
@@ -252,7 +285,13 @@ MetaboVariation <- function ( data,individual_ids,metabolites,covariates=NULL,ty
       test = cbind(test,!(test[,paste0("lwr",level)] < test[,"original"] & test[,"original"] < test[,paste0("upr",level)]))
       colnames(test)=c(colnames(test)[1:ncol(test)-1],paste0("flag",level))
     }
-    final = list("result" = test,"significant_covariates" = co_list,"chain_convergence" = rf,"model" = model,"type" = type)
+    if(is.null(covariates)){
+      final = list("result" = test,"chain_convergence" = rf,"model" = model,"type" = type)
+
+    }else{
+      final = list("result" = test,"significant_covariates" = co_list,"chain_convergence" = rf,"model" = model,"type" = type)
+
+    }
     class(final) = "MetaboVariation"
     return(final)
 }

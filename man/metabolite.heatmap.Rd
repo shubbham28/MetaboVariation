@@ -11,7 +11,7 @@ metabolite.heatmap(model, interval.width = 0.95, threshold = 1)
 
 \item{interval.width}{The width of the highest posterior density (HPD) interval considered. Must be a numeric between 0 and 1 with default value of 0.95.}
 
-\item{threshold}{A positive integer indicating the minimum number of metabolites an individual must be flagged in, in order to be included in the heatmap. Deafult is 1.}
+\item{threshold}{A positive integer indicating the minimum number of metabolites an individual must be flagged in, in order to be included in the heatmap. Default is 1.}
 }
 \value{
 Returns a heatmap that illustrates the number of individuals flagged in metabolites across time points.
