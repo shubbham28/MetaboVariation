@@ -7,7 +7,7 @@
 get.metabolites(list, divider = "_", start = TRUE)
 }
 \arguments{
-\item{list}{A list containing the names of columns that contain metabolite values across time points.}
+\item{list}{A vector containing the names of columns that contain metabolite values across time points.}
 
 \item{divider}{The character used to separate the metabolite name and time point name in the data. The default is "_".}
 

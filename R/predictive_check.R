@@ -43,8 +43,10 @@ predictive_check <- function(data,model,timepoints,metabolites,replication=100){
 
   original = list()
   data = stats::na.omit(data)
+  columns = as.vector(sapply(metabolites,function(m){stats::na.omit(stringr::str_extract(colnames(data),stringr::regex(paste(".*",m,".*",sep = ""))))}))
+  data = data[,columns]
   for (i in timepoints){
-    original[[i]] = stats::cor(data[,colnames(data) %like% paste0("_",i)])
+    original[[i]] = stats::cov(data[,colnames(data) %like% paste0("_",i)])
   }
 
   mad_model1 = matrix(0,nrow = replication,ncol = length(timepoints))
@@ -67,7 +69,7 @@ predictive_check <- function(data,model,timepoints,metabolites,replication=100){
   rownames(sub_model1) = unique(stringr::str_sub(names,end=-5))
 
   for (i in timepoints){
-    mad_model1[r,i] = mean(abs(stats::cor(sub_model1[rownames(sub_model1) %like% paste0(" ",i),]) - original[[i]]))
+    mad_model1[r,i] = mean(abs(stats::cov(sub_model1[rownames(sub_model1) %like% paste0(" ",i),]) - original[[i]]))
   }
   }
 
@@ -78,5 +80,6 @@ predictive_check <- function(data,model,timepoints,metabolites,replication=100){
  plotdf = mad_model1
   plot = ggplot2::ggplot(plotdf,ggplot2::aes(x=Timepoint,y=MAD,color = Timepoint))+ggplot2::geom_boxplot() + ggplot2::labs(x="Timepoint",y="MAD") + ggplot2::theme_classic()+
     ggplot2::theme(legend.position = "none")
-  return(list(plot = plot, mad = plotdf))
+  return(list(plot = plot, mad = plotdf,replicate=replicated_model1))
 }
+
